@@ -16,5 +16,6 @@ require.context(
 );
 
 // Your own code
+require("./theme-toggle");
 require("./plugins");
 require("./script");
