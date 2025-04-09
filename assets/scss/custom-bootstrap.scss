@@ -1,0 +1,38 @@
+// ================================
+// 🎛️ Dashboard Vehicle Theme
+// ================================
+
+$primary: #6C63FF;
+$success: #24D29C;
+$danger:  #E84D4D;
+$info:    #3ABFF8;
+$warning: #FACC15;
+$secondary: #64748B;
+$light: #F1F5F9;
+$dark:  #0F172A;
+
+$font-family-sans-serif: 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-weight-base: 400;
+$line-height-base: 1.6;
+$border-radius: 0.75rem;
+$btn-padding-x: 1.25rem;
+$btn-padding-y: 0.5rem;
+
+// Ne pas fixer body-bg ici — Bootstrap le gère avec [data-bs-theme]
+
+@import "~bootstrap/scss/bootstrap";
+
+// Optionnel : surcharges spécifiques
+[data-bs-theme="dark"] {
+  body {
+    background-color: $dark;
+    color: #F8FAFC;
+  }
+}
+
+[data-bs-theme="light"] {
+  body {
+    background-color: #f8fafc;
+    color: #1E293B;
+  }
+}

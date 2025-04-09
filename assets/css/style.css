@@ -2,6 +2,12 @@
    App specific CSS file.
    ========================================================================== */
 
+:root {
+  --bs-primary: #ff5722; /* par exemple : orange moderne */
+  --bs-primary-rgb: 255, 87, 34;
+}
+
+  
 /* universal */
 
 html {
@@ -83,4 +89,25 @@ footer .footer-nav {
   float: right;
   margin-right: 25px;
   list-style: none;
+}
+
+/* Contraste pour navbar selon le thème */
+
+[data-bs-theme="dark"] .navbar {
+  background-color: rgba(33, 37, 41, 0.85);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
+[data-bs-theme="light"] .navbar {
+  background-color: #f8f9fa;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+html, body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar, .card, .container, .form-control, .nav-link {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }

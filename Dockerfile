@@ -15,8 +15,10 @@ COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY requirements requirements
 RUN pip install --no-cache -r requirements/prod.txt
 
-COPY package.json ./
-RUN npm install
+COPY package*.json ./
+RUN npm install \
+ && npm install sass sass-loader css-loader style-loader mini-css-extract-plugin --save-dev
+
 
 COPY webpack.config.js autoapp.py ./
 COPY app app
@@ -50,6 +52,7 @@ CMD ["-c", "/etc/supervisor/supervisord.conf"]
 
 # ================================= DEVELOPMENT ================================
 FROM builder AS development
+COPY --from=builder /app/node_modules /app/node_modules
 RUN pip install --no-cache -r requirements/dev.txt
 EXPOSE 2992
 EXPOSE 5000

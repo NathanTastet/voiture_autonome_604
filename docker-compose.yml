@@ -5,7 +5,6 @@ x-build-args: &build_args
 x-default-volumes: &default_volumes
   volumes:
     - ./:/app
-    - node-modules:/app/node_modules
     - ./dev.db:/tmp/dev.db
 
 services:

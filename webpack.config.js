@@ -7,19 +7,17 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const ProductionPlugins = [
-  // production webpack plugins go here
   new webpack.DefinePlugin({
     "process.env": {
       NODE_ENV: JSON.stringify("production")
     }
   })
-]
+];
 
 const debug = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 const rootAssetPath = path.join(__dirname, 'assets');
 
 module.exports = {
-  // configuration
   context: __dirname,
   entry: {
     main_js: './assets/js/main',
@@ -27,6 +25,7 @@ module.exports = {
       path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free', 'css', 'all.css'),
       path.join(__dirname, 'node_modules', 'bootstrap', 'dist', 'css', 'bootstrap.css'),
       path.join(__dirname, 'assets', 'css', 'style.css'),
+      path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), //custom bootstrap en dernier
     ],
   },
   mode: debug,
@@ -49,27 +48,32 @@ module.exports = {
       {
         test: /\.less$/,
         use: [
-          {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-            },
-          },
-          'css-loader!less-loader',
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'less-loader'
         ],
       },
       {
         test: /\.css$/,
         use: [
-          {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-            },
-          },
+          MiniCssExtractPlugin.loader,
           'css-loader',
         ],
       },
+      {
+        test: /\.scss$/,
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'sass-loader',
+        ],
+      },
       { test: /\.html$/, type: 'asset/source' },
-      { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, type: 'asset/resource', mimetype: 'application/font-woff' },
+      {
+        test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        type: 'asset/resource',
+        mimetype: 'application/font-woff'
+      },
       {
         test: /\.(ttf|eot|svg|png|jpe?g|gif|ico)(\?.*)?$/i,
         type: 'asset/resource',
@@ -77,7 +81,20 @@ module.exports = {
           filename: '[name][ext]'
         }
       },
-      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader', options: { presets: ["@babel/preset-env"], cacheDirectory: true } },
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        options: {
+          presets: ["@babel/preset-env"],
+          cacheDirectory: true
+        }
+      },
     ],
+  },
+
+  // ✅ Masquer les warnings Sass de Bootstrap (sans bloquer les vrais logs)
+  infrastructureLogging: {
+    level: 'error'  // ou 'warn' pour garder les warnings importants
   }
 };
