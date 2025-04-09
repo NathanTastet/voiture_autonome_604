@@ -15,15 +15,13 @@ def create_dashboard(server):
 
     def serve_layout():
         # Récupère le thème via les paramètres d'URL
-        theme = request.args.get("theme", "dark")
+        theme = request.cookies.get("theme", "dark")
         is_dark = theme == "dark"
 
-        # Thème
         bg_color = "#0F172A" if is_dark else "#ffffff"
         font_color = "#F8FAFC" if is_dark else "#1E293B"
         theme_class = "bg-dark text-light" if is_dark else "bg-light text-dark"
 
-        # Graph
         graph = dcc.Graph(
             figure=go.Figure(
                 data=[go.Scatter(y=[1, 3, 2, 4])],
@@ -38,7 +36,6 @@ def create_dashboard(server):
             style={"height": "100%"}
         )
 
-        # Jauge
         gauge = dcc.Graph(
             figure=go.Figure(
                 go.Indicator(
@@ -76,11 +73,8 @@ def create_dashboard(server):
             ], fluid=True, style={"maxWidth": "100%", "overflowX": "hidden"})
         ], className=f"py-4 {theme_class}", style={"height": "100vh", "overflow": "hidden"})
 
-
-    # layout dynamique
     dash_app.layout = serve_layout
 
-    # HTML custom de la page Dash (intégré dans un iframe)
     dash_app.index_string = """
     <!DOCTYPE html>
     <html>
@@ -94,7 +88,7 @@ def create_dashboard(server):
                     margin: 0;
                     padding: 0;
                     height: 100%;
-                    overflow: hidden; /* ⛔️ enlève scroll vertical */
+                    overflow: hidden;
                 }
                 #dash-container {
                     height: 100%;
@@ -108,14 +102,13 @@ def create_dashboard(server):
                     const params = new URLSearchParams(window.location.search);
                     if (params.get("theme") !== newTheme) {
                         params.set("theme", newTheme);
-                        const newUrl = `${window.location.pathname}?${params.toString()}`;
-                        window.location.replace(newUrl);
+                        window.location.href = window.location.pathname + "?" + params.toString();
                     }
                 }
             });
             </script>
         </head>
-        <body>
+        <body style="margin: 0; padding: 0;">
             <div id="dash-container">
                 {%app_entry%}
             </div>
@@ -127,6 +120,5 @@ def create_dashboard(server):
         </body>
     </html>
     """
-
 
     return dash_app

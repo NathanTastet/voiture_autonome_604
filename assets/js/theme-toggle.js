@@ -1,7 +1,12 @@
 function notifyIframeTheme(theme) {
     const iframe = document.getElementById("dashFrame");
-    if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: 'theme', value: theme }, '*');
+    if (iframe) {
+        const currentUrl = new URL(iframe.src, window.location.origin);
+        if (currentUrl.searchParams.get("theme") !== theme) {
+            currentUrl.searchParams.set("theme", theme);
+            currentUrl.searchParams.set("_ts", Date.now()); // Param pour casser le cache
+            iframe.src = currentUrl.toString();  // 🔁 recharge avec le bon thème
+        }
     }
 }
 
@@ -13,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function setTheme(theme) {
         htmlEl.setAttribute('data-bs-theme', theme);
         localStorage.setItem('theme', theme);
+        document.cookie = "theme=" + theme + "; path=/"; 
 
         if (icon) {
             icon.classList.remove('bi-sun-fill', 'bi-moon-fill');
@@ -30,14 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const currentTheme = htmlEl.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             setTheme(newTheme);
-        });
-    }
-
-    const iframe = document.getElementById("dashFrame");
-    if (iframe) {
-        iframe.addEventListener("load", () => {
-            const currentTheme = htmlEl.getAttribute("data-bs-theme");
-            notifyIframeTheme(currentTheme);
         });
     }
 });
