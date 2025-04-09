@@ -31,6 +31,10 @@ def create_app(config_object="app.settings"):
     register_shellcontext(app)
     register_commands(app)
     configure_logger(app)
+
+    from app.dash_app import init_dash
+    init_dash(app)
+
     return app
 
 

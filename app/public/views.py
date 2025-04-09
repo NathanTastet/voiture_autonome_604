@@ -75,3 +75,8 @@ def about():
     """About page."""
     form = LoginForm(request.form)
     return render_template("public/about.html", form=form)
+
+@blueprint.route("/dashboard/")
+def dashboard():
+    theme = request.cookies.get('theme', 'dark')
+    return render_template("public/dashboard_embed.html", theme=theme)
