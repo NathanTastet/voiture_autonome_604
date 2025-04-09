@@ -14,13 +14,13 @@ def create_dashboard(server):
     )
 
     def serve_layout():
-        # Récupère le thème via les paramètres d'URL
         theme = request.cookies.get("theme", "dark")
         is_dark = theme == "dark"
 
-        bg_color = "#0F172A" if is_dark else "#ffffff"
+        # 🎨 Unified color palette
+        bg_color = "#0F172A" if is_dark else "#F8FAFC"
         font_color = "#F8FAFC" if is_dark else "#1E293B"
-        theme_class = "bg-dark text-light" if is_dark else "bg-light text-dark"
+        grid_color = "#334155" if is_dark else "#E2E8F0"
 
         graph = dcc.Graph(
             figure=go.Figure(
@@ -29,7 +29,17 @@ def create_dashboard(server):
                     title="Exemple de courbe",
                     plot_bgcolor=bg_color,
                     paper_bgcolor=bg_color,
-                    font=dict(color=font_color)
+                    font=dict(color=font_color),
+                    xaxis=dict(
+                        linecolor=font_color,
+                        gridcolor=grid_color,
+                        tickfont=dict(color=font_color)
+                    ),
+                    yaxis=dict(
+                        linecolor=font_color,
+                        gridcolor=grid_color,
+                        tickfont=dict(color=font_color)
+                    )
                 )
             ),
             config={"displayModeBar": False},
@@ -57,7 +67,8 @@ def create_dashboard(server):
                 ),
                 layout=go.Layout(
                     paper_bgcolor=bg_color,
-                    font=dict(color=font_color)
+                    font=dict(color=font_color),
+                    margin=dict(t=50, b=30, l=40, r=40)
                 )
             ),
             config={"displayModeBar": False},
@@ -65,13 +76,15 @@ def create_dashboard(server):
         )
 
         return html.Div([
-            dbc.Container([
-                dbc.Row([
-                    dbc.Col(graph, md=6),
-                    dbc.Col(gauge, md=6)
-                ])
-            ], fluid=True, style={"maxWidth": "100%", "overflowX": "hidden"})
-        ], className=f"py-4 {theme_class}", style={"height": "100vh", "overflow": "hidden"})
+            dbc.Row([
+                dbc.Col(graph, md=6),
+                dbc.Col(gauge, md=6)
+            ], className="g-4", style={"padding": "2rem"})
+        ], style={
+            "height": "100vh",
+            "overflow": "hidden",
+            "backgroundColor": bg_color
+        })
 
     dash_app.layout = serve_layout
 
@@ -108,7 +121,7 @@ def create_dashboard(server):
             });
             </script>
         </head>
-        <body style="margin: 0; padding: 0;">
+        <body>
             <div id="dash-container">
                 {%app_entry%}
             </div>
