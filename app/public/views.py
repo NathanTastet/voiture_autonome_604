@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Public section, including homepage and signup."""
+"""Section publique, incluant la page d'accueil et l'inscription."""
 from flask import (
     Blueprint,
     current_app,
@@ -8,6 +8,7 @@ from flask import (
     render_template,
     request,
     url_for,
+    g
 )
 from flask_login import login_required, login_user, logout_user
 
@@ -19,23 +20,29 @@ from app.utils import flash_errors
 
 blueprint = Blueprint("public", __name__, static_folder="../static")
 
+@blueprint.before_request
+def inject_theme():
+    g.theme = request.cookies.get("theme", "dark")
+
+@blueprint.app_context_processor
+def inject_theme_context():
+    return {"theme": g.get("theme", "dark")}
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user by ID."""
+    """Charger l'utilisateur par ID."""
     return User.get_by_id(int(user_id))
 
 
 @blueprint.route("/", methods=["GET", "POST"])
 def home():
-    """Home page."""
+    """Page d'accueil."""
     form = LoginForm(request.form)
-    current_app.logger.info("Hello from the home page!")
-    # Handle logging in
+    current_app.logger.info("Bienvenue sur la page d'accueil !")
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
-            flash("You are logged in.", "success")
+            flash("Connexion réussie.", "success")
             redirect_url = request.args.get("next") or url_for("user.members")
             return redirect(redirect_url)
         else:
@@ -46,15 +53,15 @@ def home():
 @blueprint.route("/logout/")
 @login_required
 def logout():
-    """Logout."""
+    """Déconnexion."""
     logout_user()
-    flash("You are logged out.", "info")
+    flash("Déconnexion effectuée.", "info")
     return redirect(url_for("public.home"))
 
 
 @blueprint.route("/register/", methods=["GET", "POST"])
 def register():
-    """Register new user."""
+    """Inscription nouvel utilisateur."""
     form = RegisterForm(request.form)
     if form.validate_on_submit():
         User.create(
@@ -63,7 +70,7 @@ def register():
             password=form.password.data,
             active=True,
         )
-        flash("Thank you for registering. You can now log in.", "success")
+        flash("Inscription réussie. Vous pouvez maintenant vous connecter.", "success")
         return redirect(url_for("public.home"))
     else:
         flash_errors(form)
@@ -72,11 +79,27 @@ def register():
 
 @blueprint.route("/about/")
 def about():
-    """About page."""
+    """Page À propos."""
     form = LoginForm(request.form)
     return render_template("public/about.html", form=form)
 
 @blueprint.route("/dashboard/")
 def dashboard():
-    theme = request.cookies.get('theme', 'dark')
-    return render_template("public/dashboard_embed.html", theme=theme)
+    return render_template("public/dashboard_embed.html")
+
+@blueprint.route("/pilotage")
+def pilotage():
+    return render_template("public/pilotage.html")
+
+@blueprint.route("/historique")
+def historique():
+    return render_template("public/historique.html")
+
+@blueprint.route("/admin/")
+@login_required
+def admin():
+    return render_template("admin/index.html")
+
+@blueprint.route("/reglement")
+def reglement_pdf():
+    return render_template("public/reglement.html")
