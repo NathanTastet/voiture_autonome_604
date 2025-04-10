@@ -26,12 +26,21 @@
             <i class="bi bi-clock-history"></i> Historique
           </a>
         </li>
+
         {% if current_user.is_authenticated %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('public.admin') }}">
-            <i class="bi bi-terminal"></i> Admin
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link" href="{{ url_for('user.profile') }}">
+              <i class="bi bi-person-circle"></i> Profil
+            </a>
+          </li>
+
+          {% if current_user.is_admin %}
+          <li class="nav-item ms-3">
+            <a class="nav-link" href="{{ url_for('public.admin') }}">
+              <i class="bi bi-terminal"></i> Admin
+            </a>
+          </li>
+          {% endif %}
         {% endif %}
       </ul>
 

@@ -7,6 +7,7 @@
 // JavaScript modules
 require("@fortawesome/fontawesome-free");
 require("jquery");
+require("bootstrap");
 
 
 require.context(

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2><i class="bi bi-person-check"></i> Profil & droits d’accès</h2>
+
+  <div class="mt-4">
+    <h5>Utilisateur connecté :</h5>
+    <ul class="list-group">
+      <li class="list-group-item"><strong>Nom :</strong> {{ current_user.username }}</li>
+      <li class="list-group-item"><strong>Email :</strong> {{ current_user.email }}</li>
+    </ul>
+  </div>
+
+  <div class="mt-4">
+    <h5><i class="bi bi-shield-lock"></i> Permissions d’accès :</h5>
+    <form>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="permDashboard" disabled {{ "checked" if current_user.can_access_dashboard else "" }}>
+        <label class="form-check-label" for="permDashboard">Accès au Dashboard</label>
+      </div>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="permPilotage" disabled {{ "checked" if current_user.can_access_pilotage else "" }}>
+        <label class="form-check-label" for="permPilotage">Accès au Pilotage</label>
+      </div>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="permHistorique" disabled {{ "checked" if current_user.can_access_historique else "" }}>
+        <label class="form-check-label" for="permHistorique">Accès à l’historique des courses</label>
+      </div>
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="permAdmin" disabled {{ "checked" if current_user.is_admin else "" }}>
+        <label class="form-check-label" for="permAdmin">Accès à la console d’administration</label>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

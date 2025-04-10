@@ -1,20 +1,33 @@
 {% extends "layout.html" %}
 {% block content %}
+
 <!-- Bandeau principal -->
-<div class="jumbotron">
-  <div class="container">
-    <h1 class="mt-5">Interface de supervision</h1>
-    <p class="lead">
-      Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
-    </p>
-    <p>
-      Cette interface permet de superviser, piloter et analyser les performances du robot en temps réel.
-    </p>
-    <p class="mb-5">
-      <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
-        <i class="bi bi-file-earmark-pdf"></i> Consulter le règlement du concours
-      </a>
-    </p>
+<div class="jumbotron position-relative overflow-hidden">
+  <div class="container position-relative">
+    <div class="row align-items-center">
+      <!-- Colonne image -->
+      <div class="col-md-3 d-none d-md-block">
+        <img src="{{ url_for('static', filename='img/car.png') }}"
+             alt="Voiture de course violette"
+             class="img-fluid car-float-animated">
+      </div>
+
+      <!-- Colonne texte -->
+      <div class="col-md-9">
+        <h1 class="mt-4">Interface de supervision</h1>
+        <p class="lead">
+          Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
+        </p>
+        <p>
+          Cette interface permet de superviser, piloter et analyser les performances du robot en temps réel.
+        </p>
+        <p class="mb-4">
+          <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> Consulter le règlement du concours
+          </a>
+        </p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -38,11 +51,31 @@
   </div>
 
   <div class="row mt-5">
-    <div class="col text-center">
-      <a class="btn btn-outline-secondary" href="{{ url_for('public.admin') }}">
-        <i class="bi bi-terminal"></i> Console d'administration (accès restreint)
-      </a>
+    
+    <div class="col-lg-4">
+      <h3><i class="bi bi-person"></i> Profil utilisateur</h3>
+      <p>Gérez vos informations personnelles et consultez vos permissions d'accès aux différents modules.</p>
+      {% if current_user.is_authenticated %}
+        <p><a class="btn btn-outline-primary" href="{{ url_for('user.profile') }}">Voir mon profil &raquo;</a></p>
+      {% else %}
+        <p><a class="btn btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true">
+          Voir mon profil
+        </a></p>
+      {% endif %}
     </div>
+  
+    <div class="col-lg-4">
+      <h3><i class="bi bi-terminal"></i> Console d'administration</h3>
+      <p>Accédez aux outils de gestion et à la configuration du système. Réservé aux administrateurs.</p>
+      {% if current_user.is_authenticated and current_user.is_admin %}
+        <p><a class="btn btn-outline-primary" href="{{ url_for('public.admin') }}">Accéder à la console &raquo;</a></p>
+      {% else %}
+        <p><a class="btn btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true">
+          Accès restreint
+        </a></p>
+      {% endif %}
+    </div>
+    <div class="col-lg-4"></div> <!-- Colonne vide pour équilibrer -->
   </div>
 </div>
 {% endblock %}

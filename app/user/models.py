@@ -41,6 +41,10 @@ class User(UserMixin, PkModel):
     active = Column(db.Boolean(), default=False)
     is_admin = Column(db.Boolean(), default=False)
 
+    can_access_dashboard = Column(db.Boolean(), default=False)
+    can_pilot_robot = Column(db.Boolean(), default=False)
+    can_view_history = Column(db.Boolean(), default=False)
+
     @hybrid_property
     def password(self):
         """Hashed password."""

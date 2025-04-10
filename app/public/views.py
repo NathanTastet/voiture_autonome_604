@@ -25,14 +25,16 @@ def inject_theme():
     g.theme = request.cookies.get("theme", "dark")
 
 @blueprint.app_context_processor
-def inject_theme_context():
-    return {"theme": g.get("theme", "dark")}
+def inject_globals():
+    return {
+        "theme": g.get("theme", "dark"),
+        "form": LoginForm()
+    }
 
 @login_manager.user_loader
 def load_user(user_id):
     """Charger l'utilisateur par ID."""
     return User.get_by_id(int(user_id))
-
 
 @blueprint.route("/", methods=["GET", "POST"])
 def home():
@@ -43,12 +45,11 @@ def home():
         if form.validate_on_submit():
             login_user(form.user)
             flash("Connexion réussie.", "success")
-            redirect_url = request.args.get("next") or url_for("user.members")
+            redirect_url = request.args.get("next") or url_for("public.home")
             return redirect(redirect_url)
         else:
             flash_errors(form)
-    return render_template("public/home.html", form=form)
-
+    return render_template("public/home.html")
 
 @blueprint.route("/logout/")
 @login_required
@@ -57,7 +58,6 @@ def logout():
     logout_user()
     flash("Déconnexion effectuée.", "info")
     return redirect(url_for("public.home"))
-
 
 @blueprint.route("/register/", methods=["GET", "POST"])
 def register():
@@ -76,12 +76,10 @@ def register():
         flash_errors(form)
     return render_template("public/register.html", form=form)
 
-
 @blueprint.route("/about/")
 def about():
     """Page À propos."""
-    form = LoginForm(request.form)
-    return render_template("public/about.html", form=form)
+    return render_template("public/about.html")
 
 @blueprint.route("/dashboard/")
 def dashboard():
