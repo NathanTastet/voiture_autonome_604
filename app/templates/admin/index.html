@@ -1,13 +1,51 @@
 {% extends "layout.html" %}
-
 {% block content %}
-<div class="container py-5">
-    <h1 class="mb-4"><i class="bi bi-shield-lock-fill"></i> Console d'administration</h1>
-    <p>Bienvenue sur la console d’administration. Vous pouvez ici gérer les utilisateurs, leurs accès, et consulter les logs système.</p>
-    <ul>
-        <li><a href="#">Gestion des utilisateurs</a></li>
-        <li><a href="#">Logs des courses</a></li>
-        <li><a href="#">Paramètres de sécurité</a></li>
+<div class="container mt-5">
+  <h2 class="mb-4"><i class="bi bi-terminal"></i> Console d’administration</h2>
+
+  <h5 class="mb-3">Demandes d’accès en attente</h5>
+  {% if requests %}
+    <ul class="list-group mb-5">
+      {% for r in requests %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ r.user.username }} demande l’accès à <strong>{{ r.permission }}</strong>
+          <span>
+            <a href="{{ url_for('admin.approve_request', req_id=r.id) }}" class="btn btn-sm btn-success me-2">Approuver</a>
+            <a href="{{ url_for('admin.reject_request', req_id=r.id) }}" class="btn btn-sm btn-danger">Rejeter</a>
+          </span>
+        </li>
+      {% endfor %}
     </ul>
+  {% else %}
+    <p class="text-muted">Aucune demande en attente.</p>
+  {% endif %}
+
+  <h5 class="mb-3">Utilisateurs & Permissions</h5>
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Utilisateur</th>
+          <th>Email</th>
+          <th>Permissions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email }}</td>
+            <td>
+              {% for perm in permissions %}
+                <span class="badge bg-{{ 'primary' if u.has_permission(perm.name) else 'secondary' }}">
+                  {{ perm.name }}
+                </span>
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

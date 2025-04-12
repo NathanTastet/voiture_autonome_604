@@ -12,7 +12,7 @@ from flask import (
 )
 from flask_login import login_required, login_user, logout_user
 
-from app.extensions import login_manager
+from app.extensions import login_manager, db
 from app.public.forms import LoginForm
 from app.user.forms import RegisterForm
 from app.user.models import User
@@ -34,8 +34,7 @@ def inject_globals():
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Charger l'utilisateur par ID."""
-    return User.get_by_id(int(user_id))
+    return User.get_by_id(user_id)
 
 @blueprint.route("/", methods=["GET", "POST"])
 def home():

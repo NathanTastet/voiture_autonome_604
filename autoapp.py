@@ -8,6 +8,8 @@ app = create_app()
 if os.environ.get("FLASK_SKIP_SEED") != "1":
     with app.app_context():
         from app.user.seed_admin import seed_admin
+        from app.user.init_permissions import init_permissions
         
         db.create_all()
+        init_permissions()
         seed_admin()

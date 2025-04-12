@@ -5,25 +5,19 @@
 <div class="jumbotron position-relative overflow-hidden">
   <div class="container position-relative">
     <div class="row align-items-center">
-      <!-- Colonne image -->
       <div class="col-md-3 d-none d-md-block">
         <img src="{{ url_for('static', filename='img/car.png') }}"
              alt="Voiture de course violette"
              class="img-fluid car-float-animated">
       </div>
-
-      <!-- Colonne texte -->
       <div class="col-md-9">
         <h1 class="mt-4">Interface de supervision</h1>
         <p class="lead">
           Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
         </p>
-        <p>
-          Cette interface permet de superviser, piloter et analyser les performances du robot en temps réel.
-        </p>
         <p class="mb-4">
           <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
-            <i class="bi bi-file-earmark-pdf"></i> Consulter le règlement du concours
+            <i class="bi me-1 bi-file-earmark-pdf"></i> Consulter le règlement du concours
           </a>
         </p>
       </div>
@@ -31,51 +25,88 @@
   </div>
 </div>
 
+<!-- Accès aux modules -->
 <div class="container">
   <div class="row">
+    <!-- Dashboard -->
     <div class="col-lg-4">
-      <h3><i class="bi bi-camera-video"></i> Dashboard</h3>
+      <h3><i class="bi me-1 bi-camera-video"></i> Dashboard</h3>
       <p>Caméra embarquée, vue du circuit et statistiques de course en direct.</p>
-      <p><a class="btn btn-outline-primary" href="{{ url_for('public.dashboard') }}">Accéder au dashboard &raquo;</a></p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('public.dashboard') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('dashboard') }}">
+          Accéder au dashboard &raquo;
+        </a>
+      </p>
     </div>
+
+    <!-- Pilotage -->
     <div class="col-lg-4">
-      <h3><i class="bi bi-controller"></i> Pilotage manuel</h3>
+      <h3><i class="bi me-1 bi-controller"></i> Pilotage manuel</h3>
       <p>Pilotage en direct via manette — idéal pour les tests et réglages du robot.</p>
-      <p><a class="btn btn-outline-primary" href="{{ url_for('public.pilotage') }}">Piloter le robot &raquo;</a></p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('pilotage') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('public.pilotage') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('pilotage') }}">
+          Piloter le robot &raquo;
+        </a>
+      </p>
     </div>
+
+    <!-- Historique -->
     <div class="col-lg-4">
-      <h3><i class="bi bi-clock-history"></i> Historique des courses</h3>
+      <h3><i class="bi me-1 bi-clock-history"></i> Historique des courses</h3>
       <p>Analyse des courses précédentes : chronos, trajectoires et évolutions.</p>
-      <p><a class="btn btn-outline-primary" href="{{ url_for('public.historique') }}">Voir l'historique &raquo;</a></p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('historique') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('public.historique') if current_user.is_authenticated and current_user.has_permission('historique') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('historique') }}">
+          Voir l'historique &raquo;
+        </a>
+      </p>
     </div>
   </div>
 
   <div class="row mt-5">
-    
+    <!-- Profil -->
     <div class="col-lg-4">
-      <h3><i class="bi bi-person"></i> Profil utilisateur</h3>
+      <h3><i class="bi me-1 bi-person"></i> Profil utilisateur</h3>
       <p>Gérez vos informations personnelles et consultez vos permissions d'accès aux différents modules.</p>
-      {% if current_user.is_authenticated %}
-        <p><a class="btn btn-outline-primary" href="{{ url_for('user.profile') }}">Voir mon profil &raquo;</a></p>
-      {% else %}
-        <p><a class="btn btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true">
-          Voir mon profil
-        </a></p>
-      {% endif %}
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('user.profile') if current_user.is_authenticated else '#' }}"
+           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated }}">
+          Voir mon profil &raquo;
+        </a>
+      </p>
     </div>
-  
+
+    <!-- Admin -->
     <div class="col-lg-4">
-      <h3><i class="bi bi-terminal"></i> Console d'administration</h3>
+      <h3><i class="bi me-1 bi-terminal"></i> Console d'administration</h3>
       <p>Accédez aux outils de gestion et à la configuration du système. Réservé aux administrateurs.</p>
-      {% if current_user.is_authenticated and current_user.is_admin %}
-        <p><a class="btn btn-outline-primary" href="{{ url_for('public.admin') }}">Accéder à la console &raquo;</a></p>
-      {% else %}
-        <p><a class="btn btn-outline-secondary disabled" href="#" tabindex="-1" aria-disabled="true">
-          Accès restreint
-        </a></p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('admin') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('public.admin') if current_user.is_authenticated and current_user.has_permission('admin') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('admin') }}">
+          Accéder à la console &raquo;
+        </a>
+      </p>
+    </div>
+
+    <div class="col-lg-4">
+      {% if not current_user.is_authenticated %}
+        <h3><i class="bi me-1 bi-person-plus"></i> Créer un compte</h3>
+        <p>Inscrivez-vous pour accéder à toutes les fonctionnalités de l'interface.</p>
+        <p>
+          <a class="btn btn-outline-primary" href="{{ url_for('public.register') }}">
+            Créer un compte &raquo;
+          </a>
+        </p>
       {% endif %}
     </div>
-    <div class="col-lg-4"></div> <!-- Colonne vide pour équilibrer -->
   </div>
 </div>
+
 {% endblock %}

@@ -1,0 +1,117 @@
+// ================================
+// Flash Container - Position et Animations
+// ================================
+#flash-container {
+  position: fixed;
+  z-index: 1080;
+  max-width: 420px;
+  top: 5rem;       // à ajuster selon la hauteur de la navbar
+  right: 1.5rem;   // positionné en haut à droite
+  animation: slide-in 0.4s ease-out;
+}
+
+// Animation slide-in pour l'apparition des alertes
+@keyframes slide-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Animation slide-out pour la disparition des alertes
+@keyframes slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+.alert.slide-out {
+  animation: slide-out 0.4s ease-in forwards;
+}
+
+
+// ================================
+// Styles pour thème clair
+// ================================
+[data-bs-theme="light"] {
+  .alert {
+    border-radius: 0.75rem;
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    border: 1px solid transparent;
+
+    // Bouton de fermeture : pas d'inversion nécessaire sur fond clair
+    .btn-close {
+      filter: none;
+    }
+
+    &.alert-info {
+      background-color: rgba(59, 130, 246, 0.15);
+      border-color: #3ABFF8;
+      color: #3ABFF8;
+    }
+    &.alert-success {
+      background-color: rgba(36, 210, 156, 0.15);
+      border-color: #24D29C;
+      color: #24D29C;
+    }
+    &.alert-warning {
+      background-color: rgba(250, 204, 21, 0.15);
+      border-color: #FACC15;
+      color: #FACC15;
+    }
+    &.alert-danger {
+      background-color: rgba(232, 77, 77, 0.15);
+      border-color: #E84D4D;
+      color: #E84D4D;
+    }
+  }
+}
+
+
+// ================================
+// Styles pour thème sombre (améliorés pour une meilleure lisibilité)
+// ================================
+[data-bs-theme="dark"] {
+  .alert {
+    border-radius: 0.75rem;
+    font-weight: 500;
+    backdrop-filter: blur(6px);
+    border: 1px solid transparent;
+
+    // Bouton de fermeture : inversion pour être visible sur fond sombre
+    .btn-close {
+      filter: invert(1);
+    }
+
+    &.alert-info {
+      background-color: rgba(59, 130, 246, 0.85);
+      border-color: #3ABFF8;
+      color: #fff;  // texte blanc pour contraster sur le bleu
+    }
+    &.alert-success {
+      background-color: rgba(36, 210, 156, 0.85);
+      border-color: #24D29C;
+      color: #fff;  // texte blanc sur le vert
+    }
+    &.alert-warning {
+      background-color: rgba(250, 204, 21, 0.85);
+      border-color: #FACC15;
+      color: #000;  // texte noir pour un meilleur contraste sur le jaune
+    }
+    &.alert-danger {
+      background-color: rgba(232, 77, 77, 0.85);
+      border-color: #E84D4D;
+      color: #fff;  // texte blanc sur le rouge
+    }
+  }
+}

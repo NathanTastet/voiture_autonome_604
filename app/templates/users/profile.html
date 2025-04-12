@@ -1,60 +1,65 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2><i class="bi bi-person-check"></i> Profil & droits d’accès</h2>
+<div class="container mt-5 mb-5" style="max-width: 860px;">
+  <h2 class="mb-4 text-center">
+    <i class="bi bi-person-check"></i> Profil & droits d’accès
+  </h2>
 
-  <div class="mt-4">
-    <h5>Utilisateur connecté :</h5>
-    <ul class="list-group">
-      <li class="list-group-item"><strong>Nom :</strong> {{ current_user.username }}</li>
-      <li class="list-group-item"><strong>Email :</strong> {{ current_user.email }}</li>
-    </ul>
-    <a href="{{ url_for('user.edit_profile') }}" class="btn btn-outline-primary mt-3">
-      <i class="bi bi-pencil-square"></i> Modifier mes informations
-    </a>
+  <!-- Infos utilisateur -->
+  <div class="row g-3 align-items-center mb-4">
+    <div class="col-md-6">
+      <div class="form-control d-flex align-items-center bg-transparent border rounded">
+        <i class="bi bi-person-fill me-2 text-secondary"></i>
+        <span><strong>Nom :</strong> {{ current_user.username }}</span>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-control d-flex align-items-center bg-transparent border rounded">
+        <i class="bi bi-envelope-fill me-2 text-secondary"></i>
+        <span><strong>Email :</strong> {{ current_user.email }}</span>
+      </div>
+    </div>
+    <div class="col-12 text-end">
+      <a href="{{ url_for('user.edit_profile') }}" class="btn btn-outline-primary mt-2">
+        <i class="bi bi-pencil-square"></i> Modifier mes informations
+      </a>
+    </div>
   </div>
 
-  <div class="mt-5">
-    <h5><i class="bi bi-shield-lock"></i> Permissions d’accès :</h5>
-    <form>
-      <div class="form-check form-switch mb-2 d-flex align-items-center justify-content-between">
-        <div>
-          <input class="form-check-input" type="checkbox" id="permDashboard" disabled {{ "checked" if current_user.can_access_dashboard else "" }}>
-          <label class="form-check-label" for="permDashboard">Accès au Dashboard</label>
+  <!-- Permissions -->
+  <h5 class="mb-4"><i class="bi bi-shield-lock me-2"></i> Permissions d’accès</h5>
+
+  {% set permissions = [
+    {'key': 'dashboard', 'label': 'Accès au Dashboard'},
+    {'key': 'pilotage', 'label': 'Accès au Pilotage'},
+    {'key': 'historique', 'label': 'Accès à l’historique des courses'},
+    {'key': 'admin', 'label': "Administrateur (accès à la console d'administration)"}
+  ] %}
+
+  <div class="list-group list-group-flush">
+    {% for perm in permissions %}
+      {% set has_perm = current_user.has_permission(perm.key) %}
+      {% set pending = current_user.access_requests | selectattr("permission", "equalto", perm.key) | selectattr("status", "equalto", "pending") | list | length > 0 %}
+
+      <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-3 px-0 border-top permission-item {% if has_perm %}has-permission{% endif %}">
+        <div class="form-check form-switch m-0 d-flex align-items-center gap-1">
+          <input class="form-check-input me-3" type="checkbox" id="perm{{ perm.key }}" disabled {{ "checked" if has_perm }}>
+          <label class="form-check-label mb-0" for="perm{{ perm.key }}">
+            {{ perm.label }}
+          </label>
         </div>
-        {% if not current_user.can_access_dashboard %}
-          <a href="{{ url_for('request_access', permission='dashboard') }}" class="btn btn-sm btn-outline-secondary">Demander</a>
-        {% endif %}
-      </div>
-      <div class="form-check form-switch mb-2 d-flex align-items-center justify-content-between">
         <div>
-          <input class="form-check-input" type="checkbox" id="permPilotage" disabled {{ "checked" if current_user.can_pilot_robot else "" }}>
-          <label class="form-check-label" for="permPilotage">Accès au Pilotage</label>
+          {% if not has_perm and not pending %}
+            <a href="{{ url_for('user.request_access', permission=perm.key) }}" class="btn btn-sm btn-outline-primary">Demander</a>
+          {% elif pending %}
+            <span class="text-muted small">
+              <i class="bi bi-hourglass-split me-1"></i> Demande en attente
+            </span>
+          {% endif %}
         </div>
-        {% if not current_user.can_pilot_robot %}
-          <a href="{{ url_for('request_access', permission='pilotage') }}" class="btn btn-sm btn-outline-secondary">Demander</a>
-        {% endif %}
       </div>
-      <div class="form-check form-switch mb-2 d-flex align-items-center justify-content-between">
-        <div>
-          <input class="form-check-input" type="checkbox" id="permHistorique" disabled {{ "checked" if current_user.can_view_history else "" }}>
-          <label class="form-check-label" for="permHistorique">Accès à l’historique des courses</label>
-        </div>
-        {% if not current_user.can_view_history %}
-          <a href="{{ url_for('request_access', permission='historique') }}" class="btn btn-sm btn-outline-secondary">Demander</a>
-        {% endif %}
-      </div>
-      <div class="form-check form-switch mb-2 d-flex align-items-center justify-content-between">
-        <div>
-          <input class="form-check-input" type="checkbox" id="permAdmin" disabled {{ "checked" if current_user.is_admin else "" }}>
-          <label class="form-check-label" for="permAdmin">Administrateur (accès à la console d'administration)</label>
-        </div>
-        {% if not current_user.is_admin %}
-          <a href="{{ url_for('request_access', permission='admin') }}" class="btn btn-sm btn-outline-secondary">Demander</a>
-        {% endif %}
-      </div>
-    </form>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

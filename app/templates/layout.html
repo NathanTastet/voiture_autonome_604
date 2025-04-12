@@ -1,56 +1,88 @@
 <!DOCTYPE html>
 <html class="no-js" lang="fr" data-bs-theme="{{ theme or 'dark' }}">
 
-  <head>
-    <meta charset="utf-8" />
-    <link rel="shortcut icon" href="{{static_url_for('static', filename='build/favicon.ico') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
-    
-    <title>
-      {% block page_title %}Plateforme Robot IUT Lyon 1{% endblock %}
-    </title>
+<head>
+  <meta charset="utf-8" />
+  <link rel="shortcut icon" href="{{ static_url_for('static', filename='build/favicon.ico') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
-    <meta name="description" content="{% block meta_description %}{% endblock %}" />
-    <meta name="author" content="{% block meta_author %}{% endblock %}" />
+  <title>{% block page_title %}Plateforme Robot IUT Lyon 1{% endblock %}</title>
 
-    <!-- Optimisation affichage mobile -->
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="{% block meta_description %}{% endblock %}" />
+  <meta name="author" content="{% block meta_author %}{% endblock %}" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Feuilles de style -->
-    <link rel="stylesheet" href="{{ static_url_for('static', filename='build/main_css.bundle.css') }}" />
-    {% block css %}{% endblock %}
-  </head>
-  <body class="{% block body_class %}{% endblock %}">
-    {% block body %}
-      {% with form=form %}
-        {% include "nav.html" %}
-      {% endwith %}
+  <!-- Feuilles de style -->
+  <link rel="stylesheet" href="{{ static_url_for('static', filename='build/main_css.bundle.css') }}" />
+  {% block css %}{% endblock %}
+</head>
 
-      <header>
-        {% block header %}{% endblock %}
-      </header>
+<body class="{% block body_class %}{% endblock %}">
+{% block body %}
 
-      <main role="main">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show m-3" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+  {% with form=form %}
+    {% include "nav.html" %}
+  {% endwith %}
 
-        {% block content %}{% endblock %}
-      </main>
+  <!-- ✅ Flashs positionnés au centre -->
+  <div id="flash-container" class="position-fixed">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
 
-      {% include "footer.html" %}
-      
-      <!-- JavaScript en bas pour un chargement rapide -->
-      <script src="{{ static_url_for('static', filename='build/main_js.bundle.js') }}"></script>
-      {% block js %}{% endblock %}
-    {% endblock %}
-  </body>
+  <header>{% block header %}{% endblock %}</header>
+
+  <main role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "footer.html" %}
+
+  <!-- JS en bas de page pour chargement rapide -->
+  <script src="{{ static_url_for('static', filename='build/main_js.bundle.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Fermeture manuelle animée (déjà géré)
+      document.querySelectorAll(".alert").forEach(alert => {
+        alert.addEventListener("close.bs.alert", e => {
+          e.preventDefault();
+          alert.classList.remove("show");
+          alert.classList.add("slide-out");
+          setTimeout(() => alert.remove(), 400);
+        });
+
+        // ✅ Fermeture automatique avec des délais personnalisés par catégorie
+        let duration = 4000; // Délai par défaut pour info, succès
+
+        // Adapter la durée en fonction du type de message
+        if (alert.classList.contains('alert-danger')) {
+          duration = 7000; // Plus long pour les erreurs
+        } else if (alert.classList.contains('alert-warning')) {
+          duration = 6000; // Un peu plus long pour les avertissements
+        }
+
+        // Fermeture automatique après la durée spécifiée
+        setTimeout(() => {
+          if (alert.classList.contains("show")) {
+            alert.classList.remove("show");
+            alert.classList.add("slide-out");
+            setTimeout(() => alert.remove(), 400);
+          }
+        }, duration);
+      });
+    });
+  </script>
+
+  {% block js %}{% endblock %}
+{% endblock %}
+</body>
 </html>
