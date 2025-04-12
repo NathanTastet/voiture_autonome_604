@@ -69,4 +69,3 @@ def request_access(permission):
         flash(f"Demande pour '{permission}' envoyée.", "success")
 
     return redirect(url_for("user.profile"))
-

@@ -67,46 +67,11 @@ transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     color: #dc3545 !important; /* Rouge Bootstrap */
 }
 
-// Couleurs pour les switches désactivés et actifs
-.permission-item .form-check-input:disabled {
-    opacity: 1;
-    background-color: #e2e8f0; // gris clair visible (light mode)
-    border-color: #cbd5e1;
-  }
-  
-  [data-bs-theme="dark"] .permission-item .form-check-input:disabled {
-    background-color: #334155; // gris foncé visible (dark mode)
-    border-color: #475569;
-  }
-  
-  // Quand permission active
-  .permission-item .form-check-input:disabled:checked {
-    background-color: $primary;
-    border-color: $primary;
-  }
-  
-// Labels par défaut (non accordés)
-.permission-item .form-check-label {
-    font-weight: 500;
-    color: #64748b; // gris un peu plus foncé pour contraste
-  }
-  
-  [data-bs-theme="dark"] .permission-item .form-check-label {
-    color: #cbd5e1; // plus clair que #94a3b8 (meilleur contraste)
-  }  
-  
-  .permission-item.has-permission .form-check-label {
-    color: #1e293b;
-    font-weight: 550;
-  }
-  
-  [data-bs-theme="dark"] .permission-item.has-permission .form-check-label {
-    color: #ffffff;
-    font-weight: 550;
-  }
-  
-  .permission-item .form-check-label {
-    transition: color 0.2s ease;
-  }
+// =========================================
+// 📦 Importation des composants
+// =========================================
+
 
   @import 'flash_container';
+  @import 'logo';
+  @import 'permissions'

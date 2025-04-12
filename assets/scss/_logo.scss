@@ -1,0 +1,21 @@
+/* Logo glow */
+.logo-glow {
+    height: 40px;
+    width: auto;
+    transition: filter 0.3s ease, transform 0.2s ease;
+    filter: drop-shadow(0 0 5px rgba(120, 80, 255, 0.3));
+    vertical-align: middle;
+  }
+  
+  /* Survol : glow renforcé */
+  .logo-glow:hover {
+    filter: drop-shadow(0 0 12px rgba(140, 90, 255, 0.8));
+    transform: scale(1.05);
+  }
+  
+  /* Mode sombre : même effet ou légèrement plus fort */
+  [data-bs-theme="dark"] .logo-glow {
+    filter: drop-shadow(0 0 10px rgba(140, 90, 255, 0.65));
+  }
+  
+  

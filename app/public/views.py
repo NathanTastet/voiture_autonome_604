@@ -82,21 +82,19 @@ def about():
     return render_template("public/about.html")
 
 @blueprint.route("/dashboard/")
+@login_required
 def dashboard():
     return render_template("public/dashboard_embed.html")
 
 @blueprint.route("/pilotage")
+@login_required
 def pilotage():
     return render_template("public/pilotage.html")
 
 @blueprint.route("/historique")
+@login_required
 def historique():
     return render_template("public/historique.html")
-
-@blueprint.route("/admin/")
-@login_required
-def admin():
-    return render_template("admin/index.html")
 
 @blueprint.route("/reglement")
 def reglement_pdf():
