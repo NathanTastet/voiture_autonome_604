@@ -55,7 +55,6 @@ CMD ["-c", "/etc/supervisor/supervisord.conf"]
 
 # ================================= DEVELOPMENT ================================
 FROM builder AS development
-COPY --from=builder /app/node_modules /app/node_modules
 ENV FLASK_SKIP_SEED=""
 
 RUN pip install --no-cache -r requirements/dev.txt

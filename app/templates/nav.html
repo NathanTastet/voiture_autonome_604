@@ -47,14 +47,14 @@
       <!-- À droite : thème + login/logout -->
       <div class="d-flex align-items-center ms-auto">
         <!-- Thème -->
-        <a href="#" class="nav-link px-2 me-3" id="themeToggle" title="Changer de thème">
+        <a href="#" class="nav-link px-2 me-3 fs-5" id="themeToggle" title="Changer de thème">
           <i id="themeIcon" class="bi bi-moon-fill"></i>
         </a>
 
         {% if current_user and current_user.is_authenticated %}
           <span class="navbar-text me-2">Connecté : {{ current_user.username }}</span>
           <a class="nav-link logout-link" href="{{ url_for('public.logout') }}" title="Se déconnecter">
-            <i class="bi bi-box-arrow-right"></i>
+            <i class="bi bi-box-arrow-right fs-5 ms-2"></i>
           </a>
         {% elif form %}
           <form class="form-inline d-flex" method="POST" action="{{ url_for('public.home') }}">
@@ -65,6 +65,9 @@
               <button class="btn btn-outline-primary" type="submit">Connexion</button>
             </div>
           </form>
+          <a class="nav-link ms-2 fs-4" href="{{ url_for('public.register') }}">
+            <i class="bi bi-person-plus-fill" title="Créer un compte"></i>
+          </a>
         {% endif %}
       </div>
     </div>

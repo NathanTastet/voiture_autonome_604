@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body p-4">
+          <h2 class="card-title text-center mb-4">Modifier mon profil</h2>
+
+          <form id="editProfileForm" method="POST" action="" role="form" aria-label="Formulaire de modification du profil">
+            {{ form.csrf_token }}
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="usernameField">{{ form.username.label.text }}</label>
+                {{ form.username(
+                    id="usernameField",
+                    placeholder="Nom d'utilisateur",
+                    class_="form-control",
+                    autocomplete="username",
+                    aria_required="true"
+                ) }}
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="emailField">{{ form.email.label.text }}</label>
+                {{ form.email(
+                    id="emailField",
+                    placeholder="Adresse email",
+                    class_="form-control",
+                    autocomplete="email",
+                    aria_required="true",
+                    aria_describedby="emailHelp"
+                ) }}
+                <small id="emailHelp" class="form-text text-muted">Votre adresse email restera confidentielle.</small>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="newPasswordField">{{ form.password.label.text }}</label>
+                {{ form.password(
+                    id="newPasswordField",
+                    placeholder="Laisser vide pour ne pas changer",
+                    class_="form-control",
+                    autocomplete="new-password",
+                    aria_describedby="newPasswordHelp"
+                ) }}
+                <small id="newPasswordHelp" class="form-text text-muted">Laissez ce champ vide si vous ne souhaitez pas modifier votre mot de passe.</small>
+              </div>
+
+              <div class="col-md-6 mb-3" id="confirmPasswordField">
+                <label for="currentPasswordField">{{ form.confirm.label.text }}</label>
+                {{ form.confirm(
+                    id="currentPasswordField",
+                    placeholder="Mot de passe actuel requis",
+                    class_="form-control",
+                    autocomplete="current-password",
+                    aria_required="true",
+                    aria_describedby="confirmHelp"
+                ) }}
+                <small id="confirmHelp" class="form-text text-muted">Confirmation obligatoire pour enregistrer les modifications.</small>
+              </div>
+            </div>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg" aria-label="Enregistrer les modifications">
+                <i class="bi bi-save me-1"></i> Enregistrer les modifications
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

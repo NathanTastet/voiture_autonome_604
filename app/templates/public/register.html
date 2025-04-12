@@ -1,31 +1,51 @@
-
 {% extends "layout.html" %}
 {% block content %}
-<div class="container-narrow">
-  <h1 class="mt-5">Register</h1>
-    <br/>
-    <form id="registerForm" class="form form-register" method="POST" action="" role="form">
-           {{ form.csrf_token }}
-            <div class="form-group">
-                {{form.username.label}}
-                {{form.username(placeholder="Username", class_="form-control")}}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-body p-4">
+          <h2 class="card-title text-center mb-4">Créer un compte</h2>
+
+          <form id="registerForm" method="POST" action="" role="form">
+            {{ form.csrf_token }}
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="username">{{ form.username.label.text }}</label>
+                {{ form.username(placeholder="Nom d'utilisateur", class_="form-control") }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="email">{{ form.email.label.text }}</label>
+                {{ form.email(placeholder="Adresse email", class_="form-control") }}
+                <small id="emailHelp" class="form-text text-muted">
+                  Votre adresse email restera confidentielle.
+                </small>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="password">{{ form.password.label.text }}</label>
+                {{ form.password(placeholder="Mot de passe", class_="form-control") }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="confirm">{{ form.confirm.label.text }}</label>
+                {{ form.confirm(placeholder="Confirmation du mot de passe", class_="form-control") }}
+              </div>
             </div>
-            <div class="form-group">
-                {{form.email.label}}
-                {{form.email(placeholder="Email", class_="form-control")}}
-                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-person-plus-fill me-1"></i> Créer un compte
+              </button>
             </div>
-            <div class="form-group">
-                {{form.password.label}}
-                {{form.password(placeholder="Password", class_="form-control")}}
-            </div>
-            <div class="form-group">
-                {{form.confirm.label}}
-                {{form.confirm(placeholder="Password (again)", class_="form-control")}}
-            </div>
-            <p><input class="btn btn-primary" type="submit" value="Register"></p>
-    </form>
-    <p><em>Already registered?</em> Click <a href="/">here</a> to login.</p>
+          </form>
+
+          <p class="text-center mt-3">
+            <em>Déjà inscrit ?</em>
+            <a href="/">Cliquez ici pour vous connecter</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
-

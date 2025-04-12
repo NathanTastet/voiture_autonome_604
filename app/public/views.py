@@ -18,6 +18,7 @@ from app.user.forms import RegisterForm
 from app.user.models import User
 from app.utils import flash_errors
 
+
 blueprint = Blueprint("public", __name__, static_folder="../static")
 
 @blueprint.before_request
