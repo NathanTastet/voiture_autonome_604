@@ -7,7 +7,7 @@
         <div class="card-body p-4">
           <h2 class="card-title text-center mb-4">Modifier mon profil</h2>
 
-          <form id="editProfileForm" method="POST" action="" role="form" aria-label="Formulaire de modification du profil">
+          <form id="editProfileForm" method="POST" action="" role="form" aria-label="Formulaire de modification du profil" autocomplete="off">
             {{ form.csrf_token }}
 
             <div class="row">
@@ -17,7 +17,7 @@
                     id="usernameField",
                     placeholder="Nom d'utilisateur",
                     class_="form-control",
-                    autocomplete="username",
+                    autocomplete="off",
                     aria_required="true"
                 ) }}
               </div>
@@ -28,7 +28,7 @@
                     id="emailField",
                     placeholder="Adresse email",
                     class_="form-control",
-                    autocomplete="email",
+                    autocomplete="off",
                     aria_required="true",
                     aria_describedby="emailHelp"
                 ) }}
@@ -41,7 +41,7 @@
                     id="newPasswordField",
                     placeholder="Laisser vide pour ne pas changer",
                     class_="form-control",
-                    autocomplete="new-password",
+                    autocomplete="off",
                     aria_describedby="newPasswordHelp"
                 ) }}
                 <small id="newPasswordHelp" class="form-text text-muted">Laissez ce champ vide si vous ne souhaitez pas modifier votre mot de passe.</small>
@@ -53,7 +53,7 @@
                     id="currentPasswordField",
                     placeholder="Mot de passe actuel requis",
                     class_="form-control",
-                    autocomplete="current-password",
+                    autocomplete="off",
                     aria_required="true",
                     aria_describedby="confirmHelp"
                 ) }}
