@@ -1,6 +1,16 @@
-# Test_Cookiecutter_Flask
+# Robot Platform – IUT Lyon 1
 
-Test de la librairie cookiecutter qui permet d'initialiser rapidement des projets web/python comme flask
+> 🇫🇷 *This project was developed for the national robotics competition organized by IUT Cachan, by students from IUT Lyon 1.*  
+> *See the [French version of this README](README.fr.md).*
+
+This project provides a **web-based supervision and control interface** for an autonomous robot, created for the **National Robotics Competition between French IUTs**. It offers:
+
+- **Real-time video feed** from an onboard camera
+- **Manual remote control** for testing and tuning the robot
+- **Historical analysis** of races (timing, trajectories...)
+- **User management and permissions** via an admin console
+
+The project uses a stack built on **Flask + Webpack + Bootstrap** and supports both **development and production configurations** using **Docker**.
 
 ## Docker Quickstart
 
@@ -171,3 +181,11 @@ in ``.env``:
 ```text
 SEND_FILE_MAX_AGE_DEFAULT=31556926  # one year
 ```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Portions of this code are adapted from the original [cookiecutter-flask project](https://github.com/cookiecutter-flask/cookiecutter-flask) by **Steven Loria and contributors**, also licensed under MIT.
+
+© 2025 Nathan Tastet & Anis Zouiter
