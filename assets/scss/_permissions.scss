@@ -40,3 +40,69 @@
   .permission-item .form-check-label {
     transition: color 0.2s ease;
   }
+  
+// Couleurs de base pour les rôles
+$badge-admin-bg: $warning;
+$badge-superadmin-bg: $danger;
+$badge-permission-bg-light: #e0e7ff; // clair pour light mode
+$badge-permission-color-light: #312e81; // texte pour light mode
+$badge-admin-color-light: #92400e;    // texte pour warning (orange foncé)
+$badge-superadmin-color-light: #7f1d1d; // texte pour danger (rouge foncé)
+
+// 🎖️ Base commune pour tous les badges
+.badge-permission-base {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.35rem 0.65rem;
+  line-height: 1;
+  color: #fff;
+  text-decoration: none !important;
+
+  [data-bs-theme="light"] & {
+    color: #212529;
+  }
+}
+
+// 🎯 Badge pour permissions classiques
+.badge-permission {
+  @extend .badge-permission-base;
+  background-color: $primary;
+
+  [data-bs-theme="light"] & {
+    background-color: $badge-permission-bg-light;
+    color: $badge-permission-color-light;
+  }
+}
+
+// 🛡️ Badge admin
+.badge-admin {
+  @extend .badge-permission-base;
+  background-color: $badge-admin-bg;
+  font-weight: 600;
+
+  [data-bs-theme="light"] & {
+    color: $badge-admin-color-light;
+  }
+}
+
+
+// 👑 Badge superadmin
+.badge-superadmin {
+    @extend .badge-permission-base;
+    background-color: $badge-superadmin-bg;
+    font-weight: 600;
+  
+    [data-bs-theme="light"] & {
+      color: $badge-superadmin-color-light;
+    }
+}
+
+
+/* Style pour les badges inactifs */
+.badge-inactive {
+  opacity: 0.6;
+  cursor: pointer;
+}
+  

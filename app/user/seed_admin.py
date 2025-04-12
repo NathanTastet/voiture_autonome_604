@@ -3,7 +3,7 @@ from app.extensions import db
 from app.user.models import User, Permission
 
 def seed_admin():
-    """Crée un compte admin si aucun n'existe, et lui attribue toutes les permissions."""
+    """Crée un compte superadmin si aucun n'existe, et lui attribue toutes les permissions."""
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     admin_email = os.getenv("ADMIN_EMAIL", "admin@example.com")
     admin_password = os.getenv("ADMIN_PASSWORD")
@@ -29,6 +29,6 @@ def seed_admin():
 
         db.session.add(admin)
         db.session.commit()
-        print(f"✅ Compte admin '{admin_username}' créé avec toutes les permissions.")
+        print(f"✅ Compte superadmin '{admin_username}' créé avec toutes les permissions.")
     else:
-        print("ℹ️ Un compte admin existe déjà.")
+        print("ℹ️ Un compte superadmin existe déjà.")

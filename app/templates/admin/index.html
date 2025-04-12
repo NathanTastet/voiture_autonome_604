@@ -1,33 +1,32 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4"><i class="bi bi-terminal"></i> Console d’administration</h2>
+  <h2 class="mb-4">
+    <i class="bi bi-terminal"></i> Console d’administration
+  </h2>
 
-  <h5 class="mb-3">Demandes d’accès en attente</h5>
-  {% if requests %}
-    <ul class="list-group mb-5">
-      {% for r in requests %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          {{ r.user.username }} demande l’accès à <strong>{{ r.permission }}</strong>
-          <span>
-            <a href="{{ url_for('admin.approve_request', req_id=r.id) }}" class="btn btn-sm btn-success me-2">Approuver</a>
-            <a href="{{ url_for('admin.reject_request', req_id=r.id) }}" class="btn btn-sm btn-danger">Rejeter</a>
-          </span>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-muted">Aucune demande en attente.</p>
-  {% endif %}
+  <!-- Ligne d'en-tête avec titre et bouton aligné à droite -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Utilisateurs &amp; Permissions</h5>
+    <a href="{{ url_for('admin.access_requests') }}" class="btn btn-outline-info position-relative {% if pending_count == 0 %}disabled{% endif %}">
+      <i class="bi bi-envelope"></i> Demandes d'accès
+      {% if pending_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          {{ pending_count }}
+          <span class="visually-hidden">demandes non lues</span>
+        </span>
+      {% endif %}
+    </a>
+  </div>
 
-  <h5 class="mb-3">Utilisateurs & Permissions</h5>
   <div class="table-responsive">
     <table class="table table-bordered align-middle">
-      <thead class="table-light">
+        <thead class="table">
         <tr>
           <th>Utilisateur</th>
           <th>Email</th>
           <th>Permissions</th>
+          <th style="width: 100px;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -37,10 +36,30 @@
             <td>{{ u.email }}</td>
             <td>
               {% for perm in permissions %}
-                <span class="badge bg-{{ 'primary' if u.has_permission(perm.name) else 'secondary' }}">
+                {% set is_active = u.has_permission(perm.name) %}
+                <a href="{{ url_for('admin.toggle_permission', user_id=u.id, perm_name=perm.name) }}"
+                   class="badge 
+                   {% if perm.name == 'superadmin' %}
+                     badge-superadmin
+                   {% else %}
+                   {% if perm.name == 'admin' %}
+                     badge-admin
+                   {% else %}
+                     badge-permission
+                   {% endif %}
+                   {% endif %}
+                   {% if not is_active %} badge-inactive {% endif %}"
+                   style="text-decoration: none;">
                   {{ perm.name }}
-                </span>
+                </a>
               {% endfor %}
+            </td>
+            <td>
+              {% if current_user.has_permission('superadmin') or (current_user.has_permission('admin') and not (u.has_permission('admin') or u.has_permission('superadmin'))) %}
+                <a href="{{ url_for('admin.delete_user', user_id=u.id) }}" class="btn btn-danger btn-sm w-100" title="Supprimer">
+                  <i class="bi bi-trash"></i>
+                </a>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}
