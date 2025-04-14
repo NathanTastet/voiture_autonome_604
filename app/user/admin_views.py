@@ -4,15 +4,17 @@ from flask import Blueprint, render_template, redirect, url_for, flash, g, reque
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.user.models import AccessRequest, User, Permission
+from app.utils import permission_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 @admin_bp.before_request
-def inject_theme():
+def load_theme_and_protect():
     g.theme = request.cookies.get("theme", "dark")
 
 @admin_bp.route("/", methods=["GET"])
 @login_required
+@permission_required("admin")
 def index():
     # Récupérer les demandes d'accès en attente pour notification
     pending_requests = AccessRequest.query.filter_by(status="pending").all()
@@ -30,12 +32,14 @@ def index():
 
 @admin_bp.route("/access_requests", methods=["GET"])
 @login_required
+@permission_required("admin")
 def access_requests():
     pending_requests = AccessRequest.query.filter_by(status="pending").all()
     return render_template("admin/access_requests.html", requests=pending_requests)
 
 @admin_bp.route("/approve_request/<int:req_id>", methods=["GET"])
 @login_required
+@permission_required("admin")
 def approve_request(req_id):
     access_request = AccessRequest.query.get_or_404(req_id)
     if access_request.status != "pending":
@@ -56,6 +60,7 @@ def approve_request(req_id):
 
 @admin_bp.route("/reject_request/<int:req_id>", methods=["GET"])
 @login_required
+@permission_required("admin")
 def reject_request(req_id):
     access_request = AccessRequest.query.get_or_404(req_id)
     if access_request.status != "pending":
@@ -68,6 +73,7 @@ def reject_request(req_id):
 
 @admin_bp.route("/delete_user/<int:user_id>", methods=["GET"])
 @login_required
+@permission_required("admin")
 def delete_user(user_id):
     user_to_delete = User.query.get_or_404(user_id)
     if current_user.id == user_to_delete.id:
@@ -89,6 +95,7 @@ def delete_user(user_id):
 
 @admin_bp.route("/toggle_permission/<int:user_id>/<string:perm_name>", methods=["GET"])
 @login_required
+@permission_required("admin")
 def toggle_permission(user_id, perm_name):
     # Ne pas permettre de modifier la permission "superadmin" en aucune circonstance
     if perm_name == "superadmin":

@@ -4,6 +4,7 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 from flask_login import login_required, current_user
 import subprocess
 import re
+from app.utils import permission_required
 
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -14,21 +15,26 @@ connection_info = {
 }
 
 @dashboard_bp.before_request
-@login_required
-def inject_theme():
+def load_theme_and_protect():
     g.theme = request.cookies.get("theme", "dark")
 
 @dashboard_bp.route('/')
+@login_required
+@permission_required('dashboard')
 def index():
     # Page de connexion/configuration du dashboard
     return render_template('dashboard/connect.html', config_connection=connection_info)
 
 @dashboard_bp.route('/graphs')
+@login_required
+@permission_required('dashboard')
 def graphs():
     # Page de supervision (affichage des cartes)
     return render_template('dashboard/graphs.html')
 
 @dashboard_bp.route('/vehicle/control', methods=['POST'])
+@login_required
+@permission_required('dashboard')
 def vehicle_control():
     data = request.get_json()
     # Commande "démarrer" si data.get('start') est True, sinon "arrêter"
@@ -37,6 +43,8 @@ def vehicle_control():
     return jsonify({ "status": "success", "commande": commande })
 
 @dashboard_bp.route('/vehicle/ping')
+@login_required
+@permission_required('dashboard')
 def vehicle_ping():
     # Utilise l'IP stockée dans connection_info
     ip = connection_info["ip"]
@@ -58,6 +66,8 @@ def vehicle_ping():
     return jsonify({"connected": connected, "ping": ping, "ip": ip})
 
 @dashboard_bp.route('/vehicle/ip', methods=['POST'])
+@login_required
+@permission_required('dashboard')
 def update_vehicle_ip():
     # Pour l'instant, tout le monde peut modifier l'IP pour tester.
     data = request.get_json()
@@ -71,6 +81,8 @@ def update_vehicle_ip():
         return jsonify({"status": "error", "message": "IP non valide"}), 400
 
 @dashboard_bp.route('/vehicle/retrieve_ip', methods=['GET'])
+@login_required
+@permission_required('dashboard')
 def retrieve_vehicle_ip():
     # Exemple d'endpoint pour "retrouver" l'IP à partir de la MAC via ARP ou autre méthode.
     # Ici, on simule la récupération en renvoyant la valeur stockée.

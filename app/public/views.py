@@ -19,10 +19,11 @@ from app.user.models import User
 from app.utils import flash_errors
 
 
+
 blueprint = Blueprint("public", __name__, static_folder="../static")
 
 @blueprint.before_request
-def inject_theme():
+def load_theme_and_protect():
     g.theme = request.cookies.get("theme", "dark")
 
 @blueprint.app_context_processor
