@@ -39,4 +39,8 @@ Flask-DebugToolbar==0.16.0
 # Environment variable parsing
 environs==14.1.1
 
+# Pinging
+ping3>=4.0,<5.0
+
+
 

@@ -5,13 +5,15 @@ from flask_login import login_required, current_user
 import subprocess
 import re
 from app.utils import permission_required
+from ping3 import ping
+import os
 
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 # Objet global pour stocker les informations de connexion du véhicule
 connection_info = {
-    "ip": "192.168.1.100",      # Valeur par défaut
-    "mac": "2C:CF:67:1C:51:F3"   # Adresse MAC du robot
+    "ip": os.getenv("ROBOT_IP", "192.168.1.100"),
+    "mac": os.getenv("ROBOT_MAC", "00:00:00:00:00:00")
 }
 
 @dashboard_bp.before_request
@@ -46,24 +48,16 @@ def vehicle_control():
 @login_required
 @permission_required('dashboard')
 def vehicle_ping():
-    # Utilise l'IP stockée dans connection_info
     ip = connection_info["ip"]
     try:
-        output = subprocess.check_output(["ping", "-c", "1", ip],
-                                           stderr=subprocess.STDOUT,
-                                           universal_newlines=True)
-        match = re.search(r'time=([\d\.]+) ms', output)
-        if match:
-            ping = float(match.group(1))
-            # Pour notre usage, on considère que si ping > 150 ms, l'état est "moyen"
-            connected = True
+        result = ping(ip, timeout=1)  # ✅ ping3 renvoie un float (en secondes)
+        if result is not None:
+            latency_ms = round(result * 1000, 2)  # ms
+            return jsonify({"connected": True, "ping": latency_ms, "ip": ip})
         else:
-            ping = None
-            connected = False
-    except subprocess.CalledProcessError:
-        ping = None
-        connected = False
-    return jsonify({"connected": connected, "ping": ping, "ip": ip})
+            return jsonify({"connected": False, "ping": None, "ip": ip})
+    except Exception as e:
+        return jsonify({"connected": False, "ping": None, "ip": ip, "error": str(e)})
 
 @dashboard_bp.route('/vehicle/ip', methods=['POST'])
 @login_required
@@ -78,7 +72,7 @@ def update_vehicle_ip():
         # Pour simplifier, on laisse la MAC inchangée ou on simule une récupération.
         return jsonify({"status": "success", "new_ip": connection_info["ip"], "mac": connection_info["mac"]})
     else:
-        return jsonify({"status": "error", "message": "IP non valide"}), 400
+        flash("Adresse IP invalide.", "danger")
 
 @dashboard_bp.route('/vehicle/retrieve_ip', methods=['GET'])
 @login_required
