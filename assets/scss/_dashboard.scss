@@ -1,0 +1,59 @@
+/* app/static/scss/_dashboard.scss */
+
+/* Bouton start/stop */
+#start-stop-btn {
+  margin-bottom: 20px;
+}
+
+/* Responsivité des canvas */
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Styles pour la page de connexion */
+#connection-status {
+  margin-bottom: 10px;
+}
+
+/* Carte flottante en bas à gauche : plus large et moins haute */
+#floating-info-card {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1050;
+  width: 380px;
+  padding: 0.5rem 1rem;
+  border-radius: $border-radius;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Thème clair */
+[data-bs-theme="light"] #floating-info-card {
+  background-color: #ffffff;
+  color: #1E293B;
+  border: 1px solid #e2e8f0;
+}
+
+/* Thème sombre */
+[data-bs-theme="dark"] #floating-info-card {
+  background-color: $dark;
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Carousel : uniformiser les cartes et ajouter une transition smooth */
+#dashboardCarousel .card {
+  margin: 0 auto;
+  border: none;
+  border-radius: $border-radius;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.carousel-item {
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+/* Harmonisation des titres dans les cartes */
+.card h3, .card h5 {
+  font-family: $font-family-sans-serif;
+}

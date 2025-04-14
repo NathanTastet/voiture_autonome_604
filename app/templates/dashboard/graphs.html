@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Supervision{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <!-- Carousel pour balayer les cartes -->
+  <div id="dashboardCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      <!-- Carte 1 : Trajectoire & Caméra -->
+      <div class="carousel-item active">
+        <div class="card">
+          <div class="card-body">
+            <h3>Trajectoire & Caméra</h3>
+            <div class="row">
+              <div class="col-md-6">
+                <canvas id="vehicleTrackCanvas" width="400" height="400"></canvas>
+              </div>
+              <div class="col-md-6">
+                <div class="camera-stream">
+                  <img id="cameraStream" src="https://via.placeholder.com/400x300?text=Caméra" alt="Flux caméra" class="img-fluid">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Carte 2 : Statistiques -->
+      <div class="carousel-item">
+        <div class="card">
+          <div class="card-body">
+            <h3>Statistiques</h3>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h5 class="card-title">Batterie & Vitesse</h5>
+                    <p>Batterie : <span id="battery-level">--</span>%</p>
+                    <p>Vitesse : <span id="current-speed">--</span> km/h</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h5 class="card-title">Graphique Lidar</h5>
+                    <canvas id="lidarChart" width="400" height="200"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <h5 class="card-title">Télémetrie & Codeur</h5>
+                    <p>Télémetre : <span id="telemetry">--</span> cm</p>
+                    <p>Codeur : <span id="encoder">--</span> tours/min</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Carte 3 : À compléter ultérieurement -->
+      <div class="carousel-item">
+        <div class="card">
+          <div class="card-body">
+            <h3>Autre Carte (à compléter)</h3>
+            <p>Contenu de la troisième carte...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Boutons de navigation -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Précédent</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Suivant</span>
+    </button>
+  </div>
+</div>
+
+<!-- Carte flottante en bas à gauche -->
+<div id="floating-info-card" class="card">
+  <div class="card-body d-flex flex-wrap align-items-center justify-content-between">
+    <div class="d-flex align-items-center" style="font-size: 0.8rem;">
+      <span id="connection-mode">--</span>&nbsp;|&nbsp;
+      IP: <span id="vehicle-ip-info">--</span>&nbsp;|&nbsp;
+      Ping: <span id="floating-ping">--</span> ms
+    </div>
+    <div class="d-flex align-items-center">
+      <button id="disconnect-btn" class="btn btn-outline-secondary btn-sm me-2" title="Déconnexion">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+      <button id="start-stop-btn" class="btn btn-primary btn-lg me-2">
+        <i class="bi bi-play-fill"></i> Démarrer
+      </button>
+      <div id="speed-counter" style="font-size: 1.2rem; font-weight: bold;">-- km/h</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/dashboard.bundle.js') }}"></script>
+{% endblock %}

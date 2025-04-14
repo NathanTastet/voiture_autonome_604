@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - Connexion{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1 class="mb-3">Bienvenue sur le Dashboard du Véhicule</h1>
+  <p class="lead">
+    Ce dashboard vous permet de contrôler et de superviser votre véhicule à distance.
+  </p>
+  
+  <div class="card mb-3">
+    <div class="card-body">
+      <h4>Configuration de la connexion</h4>
+      <form id="ip-form" class="mb-3">
+        <div class="mb-3">
+          <label for="vehicle-ip" class="form-label">Adresse IP du véhicule</label>
+          <input type="text" id="vehicle-ip" name="vehicle_ip" class="form-control" value="{{ config_connection.ip }}" required>
+          <div class="form-text">Vous pouvez modifier l'adresse IP puis confirmer.</div>
+          <button type="submit" class="btn btn-primary mt-2">
+            <i class="bi bi-check-circle"></i> Confirmer
+          </button>
+        </div>
+      </form>
+      <button id="retrieve-ip-btn" class="btn btn-info mb-3">
+        <i class="bi bi-arrow-clockwise"></i> Retrouver IP (@mac)
+      </button>
+      <hr>
+      <!-- Affichage simplifié du statut -->
+      <h4>Statut de la connexion : <span id="connection-status">---------</span></h4>
+      <div class="text-center mt-3">
+        <button id="connect-btn" class="btn btn-success btn-lg me-2" disabled>
+          <i class="bi bi-plug-fill"></i> Se connecter
+        </button>
+        <button id="simulate-btn" class="btn btn-secondary btn-lg">
+          <i class="bi bi-cpu-fill"></i> Simuler la voiture
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/dashboard.bundle.js') }}"></script>
+{% endblock %}

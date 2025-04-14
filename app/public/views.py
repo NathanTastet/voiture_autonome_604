@@ -81,11 +81,6 @@ def about():
     """Page À propos."""
     return render_template("public/about.html")
 
-@blueprint.route("/dashboard/")
-@login_required
-def dashboard():
-    return render_template("public/dashboard.html")
-
 @blueprint.route("/pilotage")
 @login_required
 def pilotage():

@@ -29,7 +29,7 @@
       <p>Caméra embarquée, vue du circuit et statistiques de course en direct.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('public.dashboard') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
+           href="{{ url_for('dashboard.index') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
            tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('dashboard') }}">
           Accéder au dashboard &raquo;
         </a>

@@ -21,9 +21,9 @@ module.exports = {
   context: __dirname,
   entry: {
     main_js: './assets/js/main',
+    dashboard: './assets/js/dashboard',  // <- ajoute ça
     main_css: [
       path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free', 'css', 'all.css'),
-      path.join(__dirname, 'node_modules', 'bootstrap', 'dist', 'css', 'bootstrap.css'),
       path.join(__dirname, 'assets', 'css', 'style.css'),
       path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), //custom bootstrap en dernier
     ],
@@ -70,9 +70,11 @@ module.exports = {
       },
       { test: /\.html$/, type: 'asset/source' },
       {
-        test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        test: /\.(woff(2)?|eot|ttf|otf|svg)$/,
         type: 'asset/resource',
-        mimetype: 'application/font-woff'
+        generator: {
+          filename: 'fonts/[name][ext]'  // ça crée app/static/build/fonts/
+        }
       },
       {
         test: /\.(ttf|eot|svg|png|jpe?g|gif|ico)(\?.*)?$/i,
