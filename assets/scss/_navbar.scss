@@ -12,24 +12,21 @@
 }
 
 #mainNavbar {
-    height: 66px;
-    min-height: 66px;
-    max-height: 66px;
+    height: 64px;
+    min-height: 64px;
+    max-height: 64px;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, height 0.3s ease;
     z-index: 1090;
     padding-top: 0;
     padding-bottom: 0;
     display: flex;
     align-items: center;
+    font-size: 0.95rem;
   
     .navbar-brand {
       height: 100%;
       display: flex;
       align-items: center;
-      img {
-        max-height: 48px;
-        transition: transform 0.3s ease;
-      }
     }
   
     .nav-link,
@@ -42,17 +39,53 @@
     .collapse.show .navbar-text {
       animation: fadeInDown 0.2s ease forwards;
     }
-  }
   
-  // Animation d’apparition des éléments
-  @keyframes fadeInDown {
-    0% {
-      opacity: 0;
-      transform: translateY(-6px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+    .logout-link {
+      color: inherit;
+      transition: color 0.2s ease;
   
+      &:hover {
+        color: $danger;
+      }
+    }
+  
+    .d-flex.align-items-center {
+      gap: 0.75rem;
+    }
+}
+  
+@keyframes fadeInDown {
+0% {
+    opacity: 0;
+    transform: translateY(-6px);
+}
+100% {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
+
+  
+/* ===================================
+   🚗 Logo Glow (Navbar)
+   =================================== */
+
+.logo-glow {
+    height: 48px;                          
+    width: auto;
+    object-fit: contain;
+    display: block;
+    vertical-align: middle;
+    transform: translateY(-1px);           
+    filter: drop-shadow(0 0 5px rgba(120, 80, 255, 0.3));
+    transition: filter 0.3s ease, transform 0.2s ease;
+}
+  
+.logo-glow:hover {
+    filter: drop-shadow(0 0 12px rgba(140, 90, 255, 0.8));
+    transform: scale(1.05) translateY(-1px);
+}
+
+[data-bs-theme="dark"] .logo-glow {
+    filter: drop-shadow(0 0 10px rgba(140, 90, 255, 0.65));
+}
