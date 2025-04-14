@@ -23,7 +23,7 @@ from app.utils import flash_errors
 blueprint = Blueprint("public", __name__, static_folder="../static")
 
 @blueprint.before_request
-def load_theme_and_protect():
+def load_theme():
     g.theme = request.cookies.get("theme", "dark")
 
 @blueprint.app_context_processor

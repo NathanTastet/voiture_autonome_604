@@ -12,7 +12,7 @@ from app.user.models import AccessRequest
 blueprint = Blueprint("user", __name__, url_prefix="/users", static_folder="../static")
 
 @blueprint.before_request
-def load_theme_and_protect():
+def load_theme():
     g.theme = request.cookies.get("theme", "dark")
 
 

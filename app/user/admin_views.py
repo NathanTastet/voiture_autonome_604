@@ -9,7 +9,7 @@ from app.utils import permission_required
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 @admin_bp.before_request
-def load_theme_and_protect():
+def load_theme():
     g.theme = request.cookies.get("theme", "dark")
 
 @admin_bp.route("/", methods=["GET"])
