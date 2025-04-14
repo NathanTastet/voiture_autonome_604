@@ -57,3 +57,17 @@ canvas {
 .card h3, .card h5 {
   font-family: $font-family-sans-serif;
 }
+
+/* Section statut de connexion dans connect.html */
+.connection-status {
+  border-radius: $border-radius;
+  background-color: rgba($info, 0.05);
+  padding: 1rem 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba($info, 0.1);
+}
+
+[data-bs-theme="dark"] .connection-status {
+  background-color: rgba($light, 0.03);
+  border-color: rgba($light, 0.05);
+}

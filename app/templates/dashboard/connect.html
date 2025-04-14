@@ -1,45 +1,76 @@
 {% extends "layout.html" %}
 
-{% block title %}Dashboard - Connexion{% endblock %}
+{% block page_title %}Robot IUT Lyon 1 - Dashboard{% endblock %}
+
+{% block head %}
+<style>
+  .status-indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <h1 class="mb-3">Bienvenue sur le Dashboard du Véhicule</h1>
-  <p class="lead">
-    Ce dashboard vous permet de contrôler et de superviser votre véhicule à distance.
-  </p>
-  
-  <div class="card mb-3">
-    <div class="card-body">
-      <h4>Configuration de la connexion</h4>
-      <form id="ip-form" class="mb-3">
-        <div class="mb-3">
-          <label for="vehicle-ip" class="form-label">Adresse IP du véhicule</label>
-          <input type="text" id="vehicle-ip" name="vehicle_ip" class="form-control" value="{{ config_connection.ip }}" required>
-          <div class="form-text">Vous pouvez modifier l'adresse IP puis confirmer.</div>
-          <button type="submit" class="btn btn-primary mt-2">
-            <i class="bi bi-check-circle"></i> Confirmer
-          </button>
+<div class="container mt-5">
+  <div class="text-center mb-4">
+    <h1 class="fw-bold">Bienvenue sur le Dashboard Véhicule</h1>
+  </div>
+
+  <!-- Bloc connexion -->
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card p-4 shadow-sm">
+        <div class="card-body text-center">
+
+          <h4 class="mb-4">Informations réseau</h4>
+          <ul class="list-group list-group-flush text-start mb-4">
+            <li class="list-group-item">
+              <i class="bi bi-router me-2 text-primary"></i>
+              <strong>Adresse IP :</strong> {{ config_connection.ip }}
+            </li>
+            <li class="list-group-item">
+              <i class="bi bi-ethernet me-2 text-primary"></i>
+              <strong>Adresse MAC :</strong> {{ config_connection.mac }}
+            </li>
+            <li class="list-group-item">
+              <i class="bi bi-clock-history me-2 text-primary"></i>
+              <strong>Dernière connexion :</strong> {{ last_connection }}
+            </li>
+          </ul>
+
+          <hr class="my-4">
+
+          <!-- Statut connexion -->
+          <div class="connection-status mb-4">
+            <h5 class="fw-semibold">État de la connexion</h5>
+            <div id="connection-status-text" class="fs-5 mt-2">
+              <span id="connection-label" class="text-muted">Vérification en cours...</span>
+              <span id="ping-indicator" class="status-indicator bg-secondary"></span>
+            </div>
+            <div class="text-muted small mt-1">
+              Ping : <span id="ping-value">--</span> ms
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-grid gap-2">
+            <button id="connect-btn" class="btn btn-success btn-lg" disabled>
+              <i class="bi bi-plug-fill me-1"></i> Se connecter
+            </button>
+            <button id="simulate-btn" class="btn btn-secondary btn-lg">
+              <i class="bi bi-cpu-fill me-1"></i> Simuler
+            </button>
+          </div>
+
         </div>
-      </form>
-      <button id="retrieve-ip-btn" class="btn btn-info mb-3">
-        <i class="bi bi-arrow-clockwise"></i> Retrouver IP (@mac)
-      </button>
-      <hr>
-      <!-- Affichage simplifié du statut -->
-      <h4>Statut de la connexion : <span id="connection-status">---------</span></h4>
-      <div class="text-center mt-3">
-        <button id="connect-btn" class="btn btn-success btn-lg me-2" disabled>
-          <i class="bi bi-plug-fill"></i> Se connecter
-        </button>
-        <button id="simulate-btn" class="btn btn-secondary btn-lg">
-          <i class="bi bi-cpu-fill"></i> Simuler la voiture
-        </button>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block js %}
