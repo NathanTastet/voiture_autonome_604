@@ -84,7 +84,7 @@ def about():
 @blueprint.route("/dashboard/")
 @login_required
 def dashboard():
-    return render_template("public/dashboard_embed.html")
+    return render_template("public/dashboard.html")
 
 @blueprint.route("/pilotage")
 @login_required
