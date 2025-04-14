@@ -1,0 +1,58 @@
+[data-bs-theme="light"] .navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    backdrop-filter: saturate(180%) blur(4px);
+}
+  
+[data-bs-theme="dark"] .navbar {
+    background-color: rgba(30, 41, 59, 0.8); // un bleu très foncé légèrement transparent
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); // ombre douce
+    backdrop-filter: saturate(180%) blur(6px); // effet mat glacé
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05); // subtil séparateur
+}
+
+#mainNavbar {
+    height: 66px;
+    min-height: 66px;
+    max-height: 66px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, height 0.3s ease;
+    z-index: 1090;
+    padding-top: 0;
+    padding-bottom: 0;
+    display: flex;
+    align-items: center;
+  
+    .navbar-brand {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      img {
+        max-height: 48px;
+        transition: transform 0.3s ease;
+      }
+    }
+  
+    .nav-link,
+    .navbar-text {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  
+    .collapse.show .nav-item,
+    .collapse.show .nav-link,
+    .collapse.show .navbar-text {
+      animation: fadeInDown 0.2s ease forwards;
+    }
+  }
+  
+  // Animation d’apparition des éléments
+  @keyframes fadeInDown {
+    0% {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  

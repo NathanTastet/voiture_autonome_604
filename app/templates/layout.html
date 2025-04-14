@@ -17,71 +17,65 @@
   {% block css %}{% endblock %}
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
-{% block body %}
+<body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
+  {% block body %}
 
-  {% with form=form %}
-    {% include "nav.html" %}
-  {% endwith %}
-
-  <!-- ✅ Flashs positionnés au centre -->
-  <div id="flash-container" class="position-fixed">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
+    {% with form=form %}
+      {% include "nav.html" %}
     {% endwith %}
-  </div>
 
-  <header>{% block header %}{% endblock %}</header>
+    <div id="flash-container" class="position-fixed">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
 
-  <main role="main">
-    {% block content %}{% endblock %}
-  </main>
+    <main class="flex-grow-1">
+      {% block content %}{% endblock %}
+    </main>
 
-  {% include "footer.html" %}
+    {% if not no_footer %}
+      {% include "footer.html" %}
+    {% endif %}
 
-  <!-- JS en bas de page pour chargement rapide -->
-  <script src="{{ static_url_for('static', filename='build/main_js.bundle.js') }}"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Fermeture manuelle animée (déjà géré)
-      document.querySelectorAll(".alert").forEach(alert => {
-        alert.addEventListener("close.bs.alert", e => {
-          e.preventDefault();
-          alert.classList.remove("show");
-          alert.classList.add("slide-out");
-          setTimeout(() => alert.remove(), 400);
-        });
-
-        // ✅ Fermeture automatique avec des délais personnalisés par catégorie
-        let duration = 4000; // Délai par défaut pour info, succès
-
-        // Adapter la durée en fonction du type de message
-        if (alert.classList.contains('alert-danger')) {
-          duration = 7000; // Plus long pour les erreurs
-        } else if (alert.classList.contains('alert-warning')) {
-          duration = 6000; // Un peu plus long pour les avertissements
-        }
-
-        // Fermeture automatique après la durée spécifiée
-        setTimeout(() => {
-          if (alert.classList.contains("show")) {
+    <!-- JS en bas de page pour chargement rapide -->
+    <script src="{{ static_url_for('static', filename='build/main_js.bundle.js') }}"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".alert").forEach(alert => {
+          alert.addEventListener("close.bs.alert", e => {
+            e.preventDefault();
             alert.classList.remove("show");
             alert.classList.add("slide-out");
             setTimeout(() => alert.remove(), 400);
-          }
-        }, duration);
-      });
-    });
-  </script>
+          });
 
-  {% block js %}{% endblock %}
-{% endblock %}
+          let duration = 4000;
+          if (alert.classList.contains('alert-danger')) {
+            duration = 7000;
+          } else if (alert.classList.contains('alert-warning')) {
+            duration = 6000;
+          }
+
+          setTimeout(() => {
+            if (alert.classList.contains("show")) {
+              alert.classList.remove("show");
+              alert.classList.add("slide-out");
+              setTimeout(() => alert.remove(), 400);
+            }
+          }, duration);
+        });
+      });
+    </script>
+
+    {% block js %}{% endblock %}
+  {% endblock %}
 </body>
 </html>
