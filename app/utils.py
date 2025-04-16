@@ -23,7 +23,7 @@ def permission_required(permission):
         def decorated_function(*args, **kwargs):
             if not current_user.has_permission(permission):
                 flash(f"Vous n'avez pas la permission '{permission}'.", "danger")
-                return redirect(request.referrer or url_for("public.home"))
+                return redirect(url_for("public.home"))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
