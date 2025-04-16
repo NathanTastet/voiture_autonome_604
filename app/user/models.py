@@ -5,6 +5,7 @@ import datetime as dt
 from flask_login import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.extensions import bcrypt, db
+import pytz
 
 # Table d'association User <-> Permission
 user_permissions = db.Table(
@@ -48,14 +49,20 @@ class ConnectionLog(db.Model):
     @classmethod
     def get_last_connectionlog(cls, fonction):
         """
-        Retourne le dernier log (tous utilisateurs confondus) pour une fonction donnée.
+        Retourne le dernier log (tous utilisateurs confondus) pour une fonction donnée,
+        formaté à l'heure française.
         """
-        return (
+        log = (
             cls.query
             .filter_by(fonction=fonction)
             .order_by(cls.connection_date.desc())
             .first()
         )
+        if log:
+            paris = pytz.timezone("Europe/Paris")
+            local_dt = log.connection_date.replace(tzinfo=pytz.utc).astimezone(paris)
+            return local_dt.strftime("Le %d/%m/%Y à %H:%M:%S par ") + log.user_name
+        return "Aucune"
     
 
 class User(UserMixin, db.Model):

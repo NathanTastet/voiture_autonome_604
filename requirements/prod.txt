@@ -42,5 +42,8 @@ environs==14.1.1
 # Pinging
 ping3>=4.0,<5.0
 
+# timezone  
+pytz==2023.3
+
 
 

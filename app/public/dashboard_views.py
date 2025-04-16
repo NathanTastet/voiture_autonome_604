@@ -28,15 +28,10 @@ def load_theme():
 def index():
     last_log = ConnectionLog.get_last_connectionlog("dashboard")
 
-    if last_log:
-        formatted_last_conn = last_log.connection_date.strftime("Le %d/%m/%Y à %H:%M:%S par ") + last_log.user_name
-    else:
-        formatted_last_conn = "Aucune activité enregistrée"
-
     return render_template(
         'dashboard/connect.html',
         config_connection=connection_info,
-        last_connection=formatted_last_conn
+        last_connection=last_log
     )
 
 @dashboard_bp.route('/graphs')
