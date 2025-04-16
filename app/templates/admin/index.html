@@ -58,10 +58,16 @@
               {% endfor %}
             </td>
             <td>
-              {% if current_user.has_permission('superadmin') or (current_user.has_permission('admin') and not (u.has_permission('admin') or u.has_permission('superadmin'))) %}
-                <a href="{{ url_for('admin.delete_user', user_id=u.id) }}" class="btn btn-danger btn-sm w-100" title="Supprimer">
+              {% if (current_user.has_permission('superadmin')  and not u.has_permission('superadmin'))
+              or (current_user.has_permission('admin') 
+                  and not (u.has_permission('admin') or u.has_permission('superadmin'))) %}                <!-- Bouton qui déclenche le modal de confirmation -->
+                <button type="button"
+                        class="btn btn-danger btn-sm w-100"
+                        data-bs-toggle="modal"
+                        data-bs-target="#confirmDeleteModal"
+                        data-user-id="{{ u.id }}">
                   <i class="bi bi-trash"></i>
-                </a>
+                </button>
               {% endif %}
             </td>
           </tr>
@@ -70,4 +76,53 @@
     </table>
   </div>
 </div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <!-- Formulaire pour la suppression ; ici on utilise GET puisque votre route delete_user utilise GET -->
+    <form id="deleteUserForm" action="" method="GET">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmation de suppression</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          Êtes-vous sûr de vouloir supprimer cet utilisateur ?<br>
+          Veuillez patienter 3 secondes avant de confirmer.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-danger" id="confirmDeleteButton" disabled>Supprimer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+  <script>
+    // Au démarrage du modal, configurer l'URL du formulaire et le délai de 3 secondes
+    var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+
+    confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
+      var button = event.relatedTarget; // Le bouton qui a déclenché le modal
+      var userId = button.getAttribute('data-user-id');
+
+      // Définir l'action du formulaire pour pointer vers /admin/delete_user/<id>
+      var form = document.getElementById('deleteUserForm');
+      form.action = '/admin/delete_user/' + userId; 
+
+      // Désactiver le bouton de confirmation
+      var confirmButton = document.getElementById('confirmDeleteButton');
+      confirmButton.disabled = true;
+
+      // Après 3 secondes, activer le bouton de confirmation
+      setTimeout(function () {
+        confirmButton.disabled = false;
+      }, 3000);
+    });
+  </script>
 {% endblock %}
