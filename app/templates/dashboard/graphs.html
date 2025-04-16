@@ -1,219 +1,189 @@
 {% set no_footer = true %}
-
 {% extends "layout.html" %}
-
-{% block page_title %}Robot IUT Lyon 1 - Dashboard{% endblock %}
+{% block page_title %}Robot IUT Lyon 1 – Supervision{% endblock %}
 
 {% block head %}
-<style>
-  /* Chaque carte occupe 100% de la hauteur de la fenêtre */
-  .carousel-item {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.5s ease-in-out;
-  }
-  .card.full-card {
-    width: 100%;
-    height: 90%;
-    box-shadow: 0 0 10px rgba(0,0,0,0.15);
-  }
-  /* Style du panneau flottant d'information */
-  #floating-info-card {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 1000;
-  }
-  @media (max-width: 767px) {
+  <style>
+    /* Adapté pour un layout fluide avec tabs */
+    .dash-canvas { height: 400px; width: 100%; }
+    .gauge-wrapper { max-width: 340px; margin: auto; }
     #floating-info-card {
-      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 1050;
+      width: 340px;
     }
-  }
-</style>
+    @media (max-width: 767px) {
+      #floating-info-card {
+        display: none;
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid p-0">
-  <div id="dashboardCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-touch="true">
-    <div class="carousel-inner">
-      <!-- Carte 1 : Navigation / Perception -->
-      <div class="carousel-item active">
-        <div class="card full-card">
-          <div class="card-body">
-            <h3>Navigation & Perception</h3>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <canvas id="vehicleTrackCanvas" style="width:100%; height:400px;"></canvas>
-                <p class="mt-2">Trajectoire en temps réel</p>
-              </div>
-              <div class="col-md-6">
-                <div class="camera-stream">
-                  <img id="cameraStream" src="https://via.placeholder.com/800x600?text=Caméra" alt="Flux caméra" class="img-fluid">
-                  <p class="mt-2">Flux caméra</p>
+<div class="container-fluid py-3">
+  <!-- Onglets principaux -->
+  <ul class="nav nav-pills mb-3" id="dashTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-nav" data-bs-toggle="pill" data-bs-target="#pane-nav" type="button" role="tab">Navigation</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-veh" data-bs-toggle="pill" data-bs-target="#pane-veh" type="button" role="tab">État du véhicule</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-ctl" data-bs-toggle="pill" data-bs-target="#pane-ctl" type="button" role="tab">Contrôle</button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="dashTabsContent">
+    <!-- NAVIGATION & PERCEPTION -->
+    <div class="tab-pane fade show active" id="pane-nav" role="tabpanel">
+      <div class="row g-3">
+        <div class="col-12 col-lg-8">
+          <div class="card h-100">
+            <div class="card-body">
+              <h4 class="card-title">Trajectoire</h4>
+              <canvas id="vehicleTrackCanvas" class="dash-canvas"></canvas>
+              <div class="row text-center pt-2">
+                <div class="col">
+                  <small>Vitesse</small><br><span id="current-speed" class="fw-bold">--</span> km/h
                 </div>
-              </div>
-            </div>
-            <div>
-              <p>Cap / Direction: <span id="vehicle-direction">--</span></p>
-              <p>Distance parcourue: <span id="distance-traveled">--</span> m</p>
-              <p>Dernière position GPS: <span id="last-gps">--</span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Carte 2 : État du Véhicule -->
-      <div class="carousel-item">
-        <div class="card full-card">
-          <div class="card-body">
-            <h3>État du Véhicule</h3>
-            <div class="row">
-              <div class="col-md-4 mb-3">
-                <div class="card">
-                  <div class="card-body">
-                    <h5>Batterie & Vitesse</h5>
-                    <p>Batterie : <span id="battery-level">--</span>%</p>
-                    <p>Vitesse : <span id="current-speed">--</span> km/h</p>
-                  </div>
+                <div class="col">
+                  <small>Distance</small><br><span id="distance-traveled" class="fw-bold">--</span> m
                 </div>
-              </div>
-              <div class="col-md-4 mb-3">
-                <div class="card">
-                  <div class="card-body">
-                    <h5>Télémétrie</h5>
-                    <p>Télémétrie (LiDAR/Sonar) : <span id="telemetry">--</span> cm</p>
-                    <p>Encodeurs : <span id="encoder">--</span> tours/min</p>
-                  </div>
+                <div class="col">
+                  <small>Direction</small><br><span id="vehicle-direction" class="fw-bold">--</span>
                 </div>
-              </div>
-              <div class="col-md-4 mb-3">
-                <div class="card">
-                  <div class="card-body">
-                    <h5>État des Capteurs</h5>
-                    <p>Capteurs: <span id="sensor-status">OK</span></p>
-                    <hr>
-                    <h6>Alertes</h6>
-                    <ul id="alerts-log" style="max-height: 150px; overflow-y: auto; list-style-type: none; padding-left: 0;">
-                      <li>Aucune alerte</li>
-                    </ul>
-                  </div>
+                <div class="col">
+                  <small>Tours</small><br><span id="lap-count" class="fw-bold">0</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        <div class="col-12 col-lg-4">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+              <h4 class="card-title">Flux caméra</h4>
+              <img id="cameraStream" src="https://via.placeholder.com/800x600?text=Caméra" alt="Flux caméra" class="img-fluid flex-grow-1 rounded">
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <!-- Carte 3 : Contrôle & Actions -->
-      <div class="carousel-item">
-        <div class="card full-card">
-          <div class="card-body">
-            <h3>Contrôle & Actions</h3>
-            <div class="mb-3">
-              <button id="start-stop-btn" class="btn btn-primary btn-lg me-2">
+    </div>
+
+    <!-- ÉTAT DU VÉHICULE -->
+    <div class="tab-pane fade" id="pane-veh" role="tabpanel">
+      <div class="row g-3">
+        <div class="col-12 col-xl-4">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column align-items-center">
+              <h4 class="card-title">Batterie</h4>
+              <div class="gauge-wrapper">
+                <canvas id="batteryGauge"></canvas>
+              </div>
+              <p class="mt-3">Niveau : <span id="battery-level" class="fw-bold">--</span>%</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-xl-8">
+          <div class="card h-100">
+            <div class="card-body">
+              <h4 class="card-title">Historique Batterie</h4>
+              <canvas id="batteryHistory" class="dash-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Puissance moteur</h5>
+              <span id="motor-power">--</span> W
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Consommation énergétique</h5>
+              <span id="energy-consumption">--</span> Wh
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Télémétrie</h5>
+              LiDAR/Sonar : <span id="telemetry">--</span> cm<br>
+              Encodeurs : <span id="encoder">--</span> tours/min
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRÔLE & ACTIONS -->
+    <div class="tab-pane fade" id="pane-ctl" role="tabpanel">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6 col-xl-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h4 class="card-title">Pilotage</h4>
+              <button id="start-stop-btn" class="btn btn-primary btn-lg w-100 mb-3">
                 <i class="bi bi-play-fill"></i> Démarrer
               </button>
-            </div>
-            <div class="mb-3">
-              <label for="mode-selector" class="form-label">Sélectionner le mode de pilotage :</label>
-              <select id="mode-selector" class="form-select">
+              <label for="mode-selector" class="form-label">Mode :</label>
+              <select id="mode-selector" class="form-select mb-3">
                 <option value="manuel">Manuel</option>
                 <option value="auto">Automatique</option>
                 <option value="simu" selected>Simulation</option>
               </select>
-            </div>
-            <div class="mb-3">
-              <button id="reset-sensors-btn" class="btn btn-warning">
-                <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser les capteurs
+              <button id="reset-sensors-btn" class="btn btn-warning w-100">
+                <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser capteurs
               </button>
             </div>
-            <div>
-              <h5>Journal d’Activité</h5>
-              <div id="activity-log" style="max-height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #f8f9fa;">
-                <p>Aucune action pour le moment.</p>
-              </div>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6 col-xl-8">
+          <div class="card h-100">
+            <div class="card-body">
+              <h4 class="card-title">Journal d’activité</h4>
+              <div id="activity-log" style="max-height: 260px; overflow-y: auto;"></div>
             </div>
           </div>
         </div>
       </div>
-      
     </div>
-    <!-- Boutons de navigation du carousel -->
-    <button class="carousel-control-prev" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Précédent</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#dashboardCarousel" data-bs-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Suivant</span>
-    </button>
   </div>
 </div>
 
-<!-- Panneau flottant d'information (version desktop) -->
-<div id="floating-info-card" class="card">
-  <div class="card-body d-flex flex-wrap align-items-center justify-content-between">
-    <div class="d-flex align-items-center" style="font-size: 0.8rem;">
-      <span id="connection-mode">--</span>&nbsp;|&nbsp;
-      IP: <span id="vehicle-ip-info">{{ config_connection.ip }}</span>&nbsp;|&nbsp;
-      Ping: <span id="floating-ping">--</span> ms
-    </div>
-    <div class="d-flex align-items-center">
-      <button id="toggle-floating-btn" class="btn btn-outline-secondary btn-sm me-2" title="Réduire/Masquer le panneau">
-        <i class="bi bi-arrows-angle-contract"></i>
-      </button>
-      <button id="start-stop-floating-btn" class="btn btn-primary btn-sm">
-        <i class="bi bi-play-fill"></i>
-      </button>
-    </div>
+<!-- Panneau flottant (desktop) -->
+<div id="floating-info-card" class="card shadow-sm">
+  <div class="card-body d-flex justify-content-between align-items-center small">
+    <span>
+      <span id="connection-mode">--</span> |
+      IP : <span id="vehicle-ip-info">{{ config_connection.ip }}</span> |
+      Ping : <span id="floating-ping">--</span> ms
+    </span>
+    <button id="toggle-floating-btn" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrows-angle-contract"></i>
+    </button>
   </div>
 </div>
 {% endblock %}
 
 {% block js %}
-<!-- Intégration de Chart.js pour la trajectoire -->
-<script src="{{ url_for('static', filename='build/dashboard.bundle.js') }}"></script>
-<script>
-  // Initialisation du graphique de trajectoire sur la carte Navigation & Perception
-  document.addEventListener("DOMContentLoaded", function() {
-    const ctx = document.getElementById('vehicleTrackCanvas').getContext('2d');
-    window.vehicleTrackChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-          labels: [],
-          datasets: [{
-              label: 'Trajectoire',
-              data: [],
-              fill: false,
-              tension: 0.1
-          }]
-      },
-      options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-              x: { display: true },
-              y: { display: true }
-          }
-      }
+  <script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
+  <script src="{{ url_for('static', filename='build/dash-graphs.bundle.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      window.startPingLoop();
+      window.setupStartStopControl();  // ← obligatoire !
     });
-    
-    // Gestion du panneau flottant rétractable
-    const floatingInfo = document.getElementById("floating-info-card");
-    const toggleBtn = document.getElementById("toggle-floating-btn");
-    toggleBtn.addEventListener("click", function(){
-      if(floatingInfo.style.display === "none"){
-        floatingInfo.style.display = "block";
-      } else {
-        floatingInfo.style.display = "none";
-      }
-    });
-  });
-
-  window.addEventListener("beforeunload", function () {
-    navigator.sendBeacon("/dashboard/log-disconnect");
-  });
-</script>
+  </script>
 {% endblock %}

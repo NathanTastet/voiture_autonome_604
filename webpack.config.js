@@ -21,8 +21,11 @@ module.exports = {
   context: __dirname,
   entry: {
     main_js: './assets/js/main',
-    dashboard: './assets/js/dashboard',
     pilotage: './assets/js/pilotage', 
+    // ---- Dashboard split ----
+    "dash-common":  "./assets/js/dashboard/dash_common.js",
+    "dash-connect": "./assets/js/dashboard/dash_connect.js",
+    "dash-graphs":  "./assets/js/dashboard/dash_graphs.js",
     main_css: [
       path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free', 'css', 'all.css'),
       path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), //custom bootstrap en dernier
