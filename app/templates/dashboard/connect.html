@@ -16,7 +16,7 @@
 
 {% block content %}
 <div class="container mt-2">
-  <div class="text-center my-3">
+  <div class="text-center my-4">
     <h1 class="fw">Bienvenue sur le Dashboard</h1>
   </div>
 
@@ -26,14 +26,14 @@
       <div class="card p-3 shadow-sm">
         <div class="card-body text-center">
 
-          <h4 class="mb-3">Informations réseau</h4>
+          <h4 class="mb-3">Configuration réseau</h4>
           <ul class="list-group list-group-flush text-start mb-3">
             <li class="list-group-item">
-              <i class="bi bi-router me-2 text-primary"></i>
+              <i class="bi bi-wifi me-2 text-primary"></i>
               <strong>Adresse IP :</strong> {{ config_connection.ip }}
             </li>
             <li class="list-group-item">
-              <i class="bi bi-ethernet me-2 text-primary"></i>
+              <i class="bi bi-pci-card-network me-2 text-primary"></i>
               <strong>Adresse MAC :</strong> {{ config_connection.mac }}
             </li>
             <li class="list-group-item">

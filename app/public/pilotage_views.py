@@ -17,7 +17,7 @@ def load_theme():
 
 @pilotage_bp.route("/")
 @login_required
-@permission_required('dashboard')
+@permission_required('pilotage')
 def index():
     return render_template(
         "pilotage/pilotage.html",

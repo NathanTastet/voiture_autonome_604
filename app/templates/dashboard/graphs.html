@@ -211,5 +211,9 @@
       }
     });
   });
+
+  window.addEventListener("beforeunload", function () {
+    navigator.sendBeacon("/dashboard/log-disconnect");
+  });
 </script>
 {% endblock %}

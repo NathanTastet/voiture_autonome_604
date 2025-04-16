@@ -68,3 +68,10 @@ def vehicle_ping():
             return jsonify({"connected": False, "ping": None, "ip": ip})
     except Exception as e:
         return jsonify({"connected": False, "ping": None, "ip": ip, "error": str(e)})
+
+@dashboard_bp.route('/log-disconnect', methods=['POST'])
+@login_required
+@permission_required('dashboard')
+def log_disconnect():
+    current_user.log_connection("dashboard", "déconnexion")
+    return jsonify({"status": "logged"})

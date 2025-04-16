@@ -56,13 +56,13 @@ class EditProfileForm(FlaskForm):
         if field.data != current_user.username:
             user = User.query.filter_by(username=field.data).first()
             if user:
-                raise ValidationError("Ce nom d'utilisateur est déjà utilisé.")
+                field.errors.append("Ce nom d'utilisateur est déjà utilisé.")
 
     def validate_email(self, field):
         if field.data != current_user.email:
             user = User.query.filter_by(email=field.data).first()
             if user:
-                raise ValidationError("Cette adresse e-mail est déjà utilisée.")
+                field.errors.append("Cette adresse e-mail est déjà utilisée.")
 
     def validate(self, **kwargs):
         print("TYPE:", type(current_user.password))

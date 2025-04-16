@@ -40,15 +40,16 @@
           <ul class="list-group list-group-flush mb-3">
             <li class="list-group-item"><i class="bi bi-router me-2 text-primary"></i><strong>IP :</strong> {{ config_connection.ip }}</li>
             <li class="list-group-item"><i class="bi bi-ethernet me-2 text-primary"></i><strong>MAC :</strong> {{ config_connection.mac }}</li>
-            <li class="list-group-item"><i class="bi bi-clock-history me-2 text-primary"></i><strong>Derni re connexion :</strong> {{ last_connection }}</li>
+            <li class="list-group-item"><i class="bi bi-clock-history me-2 text-primary"></i><strong>Dernière connexion :</strong> {{ last_connection }}</li>
           </ul>
 
+
           <div class="text-center mb-3">
-            <img id="camera-feed" src="/video_feed" alt="Flux cam ra" class="camera-stream img-fluid">
+            <img id="camera-feed" src="/video_feed" alt="Flux caméra" class="camera-stream img-fluid">
           </div>
 
           <div class="mb-3">
-            <label for="mode-selector" class="form-label">S lection du mode :</label>
+            <label for="mode-selector" class="form-label">Sélection du mode :</label>
             <select id="mode-selector" class="form-select">
               <option value="manuel">Manuel</option>
               <option value="auto">Automatique</option>
@@ -56,8 +57,8 @@
           </div>
 
           <div id="manual-controls" class="alert alert-info d-none">
-            <strong>Mode Manuel activ .</strong> Connectez une manette compatible.<br>
-            R2 : Acc l rer | L2 : Freiner / Reculer | Joystick gauche : Direction
+            <strong>Mode Manuel activé.</strong> Connectez une manette compatible.<br>
+            R2 : Accélérer | L2 : Freiner / Reculer | Joystick gauche : Direction
           </div>
 
           <div class="d-grid">
@@ -75,8 +76,8 @@
 <div id="gamepad-popup" class="d-flex">
   <div class="card text-center">
     <div class="card-body">
-      <h5 class="card-title">Manette d tect e</h5>
-      <p>Contr le manuel activ .</p>
+      <h5 class="card-title">Manette détectée</h5>
+      <p>Contrôle manuel activé.</p>
       <button class="btn btn-success" onclick="document.getElementById('gamepad-popup').style.display='none'">OK</button>
     </div>
   </div>
