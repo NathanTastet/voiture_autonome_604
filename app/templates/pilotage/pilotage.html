@@ -1,0 +1,88 @@
+{% set no_footer = true %}
+
+{% extends "layout.html" %}
+
+{% block page_title %}Robot IUT Lyon 1 - Pilotage{% endblock %}
+
+{% block head %}
+<style>
+  .camera-stream {
+    width: 100%;
+    max-height: 500px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  #gamepad-popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  #gamepad-popup .card {
+    padding: 20px;
+    max-width: 400px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <div class="card shadow">
+        <div class="card-body">
+          <h3 class="card-title text-center mb-3">Mode Pilotage</h3>
+
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item"><i class="bi bi-router me-2 text-primary"></i><strong>IP :</strong> {{ config_connection.ip }}</li>
+            <li class="list-group-item"><i class="bi bi-ethernet me-2 text-primary"></i><strong>MAC :</strong> {{ config_connection.mac }}</li>
+            <li class="list-group-item"><i class="bi bi-clock-history me-2 text-primary"></i><strong>Derni re connexion :</strong> {{ last_connection }}</li>
+          </ul>
+
+          <div class="text-center mb-3">
+            <img id="camera-feed" src="/video_feed" alt="Flux cam ra" class="camera-stream img-fluid">
+          </div>
+
+          <div class="mb-3">
+            <label for="mode-selector" class="form-label">S lection du mode :</label>
+            <select id="mode-selector" class="form-select">
+              <option value="manuel">Manuel</option>
+              <option value="auto">Automatique</option>
+            </select>
+          </div>
+
+          <div id="manual-controls" class="alert alert-info d-none">
+            <strong>Mode Manuel activ .</strong> Connectez une manette compatible.<br>
+            R2 : Acc l rer | L2 : Freiner / Reculer | Joystick gauche : Direction
+          </div>
+
+          <div class="d-grid">
+            <button id="go-auto" class="btn btn-primary d-none">
+              <i class="bi bi-caret-right-fill"></i> Lancer le mode automatique
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup de confirmation manette -->
+<div id="gamepad-popup" class="d-flex">
+  <div class="card text-center">
+    <div class="card-body">
+      <h5 class="card-title">Manette d tect e</h5>
+      <p>Contr le manuel activ .</p>
+      <button class="btn btn-success" onclick="document.getElementById('gamepad-popup').style.display='none'">OK</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='build/pilotage.bundle.js') }}"></script>
+{% endblock %}

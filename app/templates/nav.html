@@ -20,7 +20,7 @@
         {% endif %}
         {% if current_user.is_authenticated and current_user.has_permission('pilotage') %}
         <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('public.pilotage') }}">
+          <a class="nav-link" href="{{ url_for('pilotage.index') }}">
             <i class="bi bi-controller"></i> Pilotage
           </a>
         </li>

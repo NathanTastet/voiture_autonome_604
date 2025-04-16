@@ -42,7 +42,7 @@
       <p>Pilotage en direct via manette — idéal pour les tests et réglages du robot.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('pilotage') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('public.pilotage') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
+           href="{{ url_for('pilotage.index') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
            tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('pilotage') }}">
           Piloter le robot &raquo;
         </a>
