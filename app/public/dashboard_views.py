@@ -1,10 +1,14 @@
 # app/public/dashboard_views.py
 # -*- coding: utf-8 -*-
+
 from flask import Blueprint, render_template, request, jsonify, session, g
-from flask_login import login_required
+from flask_login import login_required, current_user
 from ping3 import ping
 import os
 from app.utils import permission_required
+from datetime import datetime
+from app.user.models import ConnectionLog
+
 
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
@@ -22,22 +26,29 @@ def load_theme():
 @login_required
 @permission_required('dashboard')
 def index():
-    # Page de connexion : on affiche les infos réseau en lecture seule ainsi que le statut
+    last_log = ConnectionLog.get_last_connectionlog("dashboard")
+
+    if last_log:
+        formatted_last_conn = last_log.connection_date.strftime("Le %d/%m/%Y à %H:%M:%S par ") + last_log.user_name
+    else:
+        formatted_last_conn = "Aucune activité enregistrée"
+
     return render_template(
         'dashboard/connect.html',
         config_connection=connection_info,
-        last_connection=session.get("last_connection", "Aucune")
+        last_connection=formatted_last_conn
     )
 
 @dashboard_bp.route('/graphs')
 @login_required
 @permission_required('dashboard')
 def graphs():
-    # Page de supervision avec trois cartes
-    session["last_connection"] = "Dernière connexion : Maintenant"
+    current_user.log_connection("dashboard", "connexion")  # Log connexion
+
     return render_template(
-    'dashboard/graphs.html',
-    config_connection=connection_info)
+        'dashboard/graphs.html',
+        config_connection=connection_info
+    )
 
 @dashboard_bp.route('/vehicle/control', methods=['POST'])
 @login_required
