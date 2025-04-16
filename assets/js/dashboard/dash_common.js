@@ -101,3 +101,7 @@ export function setupStartStopControl() {
 window.addEventListener("beforeunload", () =>
   navigator.sendBeacon("/dashboard/log-disconnect")
 );
+
+// Pour rendre ces fonctions disponibles globalement (ex : depuis un <script> dans le HTML)
+window.startPingLoop = startPingLoop;
+window.setupStartStopControl = setupStartStopControl;
