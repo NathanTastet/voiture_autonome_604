@@ -1,122 +1,183 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<!-- Bandeau principal -->
-<div class="jumbotron position-relative overflow-hidden">
-  <div class="container position-relative">
-    <div class="row align-items-center">
-      <div class="col-md-9">
-        <h1 class="mt-4">Interface de supervision</h1>
-        <p class="lead">
-          Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
+{% if current_user.is_authenticated %}
+  <!-- Ancien bandeau principal -->
+  <div class="jumbotron position-relative overflow-hidden">
+    <div class="container position-relative">
+      <div class="row align-items-center">
+        <div class="col-md-9">
+          <h1 class="mt-4">Interface de supervision</h1>
+          <p class="lead">
+            Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
+          </p>
+          <p class="mb-4">
+            <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
+              <i class="bi me-1 bi-file-earmark-pdf"></i> Consulter le règlement du concours
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <!-- Nouveau bandeau principal pour non-connectés -->
+  <div class="jumbotron position-relative overflow-hidden py-4 mt-3">
+    <div class="container text-center">
+      <h1 class="display-4">Interface de supervision et de contrôle</h1>
+      <p class="lead">
+        Pour un robot autonome — Concours National de Robotique inter‑IUT de Cachan
+      </p>
+      <p class="mt-4">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('public.register') }}">
+          <i class="bi me-1 bi-person-plus"></i> Créer un compte
+        </a>
+      </p>
+      <p class="text-muted mt-2">
+        Vous avez déjà un compte ? Connectez-vous en haut à droite.
+      </p>
+    </div>
+  </div>
+{% endif %}
+
+<div class="container my-3">
+  {% if not current_user.is_authenticated %}
+    <div class="row g-4 mb-5">
+      <!-- Carte Flux vidéo -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center border-0 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-camera-video fs-1 mb-3"></i>
+            <h5 class="card-title">Flux vidéo en direct</h5>
+            <p class="card-text">
+              Visualisez le circuit et l’environnement du robot en temps réel via la caméra embarquée.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte Pilotage manuel -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center border-0 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-controller fs-1 mb-3"></i>
+            <h5 class="card-title">Pilotage manuel à distance</h5>
+            <p class="card-text">
+              Prenez le contrôle du robot pour tester et ajuster son comportement en direct.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte Historique -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center border-0 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-clock-history fs-1 mb-3"></i>
+            <h5 class="card-title">Analyse historique</h5>
+            <p class="card-text">
+              Consultez les chronos, trajectoires et statistiques des courses passées.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte Gestion utilisateurs -->
+      <div class="col-md-6 col-lg-3">
+        <div class="card h-100 text-center border-0 shadow-sm">
+          <div class="card-body">
+            <i class="bi bi-people fs-1 mb-3"></i>
+            <h5 class="card-title">Gestion des utilisateurs</h5>
+            <p class="card-text">
+              Créez des comptes, gérez les permissions et accédez à la console d’administration.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Accès aux modules pour utilisateur authentifié -->
+    <div class="row g-4">
+      <!-- Carte interactive -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-map"></i> Carte interactive</h3>
+        <p>Visualisez la position du robot en temps réel sur une carte interactive.</p>
+        <p>
+          <a class="btn {{ 'btn-outline-primary' if current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
+             href="{{ url_for('dashboard.maps') if current_user.has_permission('dashboard') else '#' }}"
+             tabindex="-1" aria-disabled="{{ not current_user.has_permission('dashboard') }}">
+            Accéder à la carte &raquo;
+          </a>
         </p>
-        <p class="mb-4">
-          <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
-            <i class="bi me-1 bi-file-earmark-pdf"></i> Consulter le règlement du concours
+      </div>
+
+      <!-- Statistiques -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-bar-chart"></i> Statistiques</h3>
+        <p>Consultez les statistiques de performance et les indicateurs clés en direct.</p>
+        <p>
+          <a class="btn {{ 'btn-outline-primary' if current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
+             href="{{ url_for('dashboard.stats') if current_user.has_permission('dashboard') else '#' }}"
+             tabindex="-1" aria-disabled="{{ not current_user.has_permission('dashboard') }}">
+            Accéder aux statistiques &raquo;
+          </a>
+        </p>
+      </div>
+
+      <!-- Pilotage manuel -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-controller"></i> Pilotage manuel</h3>
+        <p>Pilotage en direct via manette — idéal pour les tests et réglages du robot.</p>
+        <p>
+          <a class="btn {{ 'btn-outline-primary' if current_user.has_permission('pilotage') else 'btn-outline-secondary disabled text-muted' }}"
+             href="{{ url_for('dashboard.pilotage') if current_user.has_permission('pilotage') else '#' }}"
+             tabindex="-1" aria-disabled="{{ not current_user.has_permission('pilotage') }}">
+            Piloter le robot &raquo;
           </a>
         </p>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Accès aux modules -->
-<div class="container">
-  <div class="row">
-    <!-- Carte interactive -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-map"></i> Carte interactive</h3>
-      <p>Visualisez la position du robot en temps réel sur une carte interactive.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('dashboard.maps') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('dashboard')) }}">
-          Accéder à la carte &raquo;
-        </a>
-      </p>
-    </div>
-
-    <!-- Statistiques -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-bar-chart"></i> Statistiques</h3>
-      <p>Consultez les statistiques de performance et les indicateurs clés en direct.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('dashboard.stats') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('dashboard')) }}">
-          Accéder aux statistiques &raquo;
-        </a>
-      </p>
-    </div>
-
-    <!-- Pilotage manuel -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-controller"></i> Pilotage manuel</h3>
-      <p>Pilotage en direct via manette — idéal pour les tests et réglages du robot.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('pilotage') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('dashboard.pilotage') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('pilotage')) }}">
-          Piloter le robot &raquo;
-        </a>
-      </p>
-    </div>
-  </div>
-
-  <div class="row mt-5">
-    <!-- Historique des courses -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-clock-history"></i> Historique des courses</h3>
-      <p>Analyse des courses précédentes : chronos, trajectoires et évolutions.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('historique') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('public.historique') if current_user.is_authenticated and current_user.has_permission('historique') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('historique')) }}">
-          Voir l'historique &raquo;
-        </a>
-      </p>
-    </div>
-
-    <!-- Profil utilisateur -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-person-circle"></i> Profil utilisateur</h3>
-      <p>Gérez vos informations personnelles et consultez vos permissions d'accès aux différents modules.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('user.profile') if current_user.is_authenticated else '#' }}"
-           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated }}">
-          Voir mon profil &raquo;
-        </a>
-      </p>
-    </div>
-
-    <!-- Console d'administration -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-terminal"></i> Console d'administration</h3>
-      <p>Accédez aux outils de gestion et à la configuration du système. Réservé aux administrateurs.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('admin') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('admin.index') if current_user.is_authenticated and current_user.has_permission('admin') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('admin')) }}">
-          Accéder à la console &raquo;
-        </a>
-      </p>
-    </div>
-  </div>
-
-  <div class="row mt-5">
-    <div class="col-lg-4 offset-lg-4">
-      {% if not current_user.is_authenticated %}
-        <h3><i class="bi me-1 bi-person-plus"></i> Créer un compte</h3>
-        <p>Inscrivez-vous pour accéder à toutes les fonctionnalités de l'interface.</p>
+    <div class="row g-4 mt-4">
+      <!-- Historique des courses -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-clock-history"></i> Historique des courses</h3>
+        <p>Analyse des courses précédentes : chronos, trajectoires et évolutions.</p>
         <p>
-          <a class="btn btn-outline-primary" href="{{ url_for('public.register') }}">
-            Créer un compte &raquo;
+          <a class="btn {{ 'btn-outline-primary' if current_user.has_permission('historique') else 'btn-outline-secondary disabled text-muted' }}"
+             href="{{ url_for('public.historique') if current_user.has_permission('historique') else '#' }}"
+             tabindex="-1" aria-disabled="{{ not current_user.has_permission('historique') }}">
+            Voir l'historique &raquo;
           </a>
         </p>
-      {% endif %}
+      </div>
+
+      <!-- Profil utilisateur -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-person-circle"></i> Profil utilisateur</h3>
+        <p>Gérez vos informations personnelles et consultez vos permissions.</p>
+        <p>
+          <a class="btn btn-outline-primary" href="{{ url_for('user.profile') }}">
+            Voir mon profil &raquo;
+          </a>
+        </p>
+      </div>
+
+      <!-- Console d'administration -->
+      <div class="col-lg-4">
+        <h3><i class="bi me-1 bi-terminal"></i> Console d'administration</h3>
+        <p>Outils de gestion et configuration du système (admin uniquement).</p>
+        <p>
+          <a class="btn {{ 'btn-outline-primary' if current_user.has_permission('admin') else 'btn-outline-secondary disabled text-muted' }}"
+             href="{{ url_for('admin.index') if current_user.has_permission('admin') else '#' }}"
+             tabindex="-1" aria-disabled="{{ not current_user.has_permission('admin') }}">
+            Accéder à la console &raquo;
+          </a>
+        </p>
+      </div>
     </div>
-  </div>
+  {% endif %}
 </div>
 
 {% endblock %}
