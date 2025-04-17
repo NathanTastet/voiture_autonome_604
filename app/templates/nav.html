@@ -1,50 +1,66 @@
 <nav class="navbar navbar-expand-lg fixed-top" id="mainNavbar">
   <div class="container-fluid">
     <a class="navbar-brand d-flex align-items-center" href="{{ url_for('public.home') }}">
-      <img src="{{ url_for('static', filename='build/car.png') }}" alt="IUT Lyon 1" class="img-fluid logo-glow">
+      <img src="{{ url_for('static', filename='build/car.png') }}"
+           alt="IUT Lyon 1" class="img-fluid logo-glow">
     </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto">
         {% if current_user.is_authenticated and current_user.has_permission('dashboard') %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('dashboard.index') }}">
-            <i class="bi bi-graph-up-arrow"></i> Dashboard
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link{% if request.endpoint=='dashboard.maps' %} active{% endif %}"
+               href="{{ url_for('dashboard.maps') }}">
+              <i class="bi bi-map"></i> Carte interactive
+            </a>
+          </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link{% if request.endpoint=='dashboard.stats' %} active{% endif %}"
+               href="{{ url_for('dashboard.stats') }}">
+              <i class="bi bi-bar-chart"></i> Statistiques
+            </a>
+          </li>
         {% endif %}
+
         {% if current_user.is_authenticated and current_user.has_permission('pilotage') %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('pilotage.index') }}">
-            <i class="bi bi-controller"></i> Pilotage
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link{% if request.endpoint=='dashboard.pilotage' %} active{% endif %}"
+               href="{{ url_for('dashboard.pilotage') }}">
+              <i class="bi bi-controller"></i> Pilotage
+            </a>
+          </li>
         {% endif %}
+
         {% if current_user.is_authenticated and current_user.has_permission('historique') %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('public.historique') }}">
-            <i class="bi bi-clock-history"></i> Historique
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link{% if request.endpoint=='public.historique' %} active{% endif %}"
+               href="{{ url_for('public.historique') }}">
+              <i class="bi bi-clock-history"></i> Historique
+            </a>
+          </li>
         {% endif %}
+
         {% if current_user.is_authenticated %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('user.profile') }}">
-            <i class="bi bi-person-circle"></i> Profil
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link" href="{{ url_for('user.profile') }}">
+              <i class="bi bi-person-circle"></i> Profil
+            </a>
+          </li>
         {% endif %}
+
         {% if current_user.is_authenticated and current_user.has_permission('admin') %}
-        <li class="nav-item ms-3">
-          <a class="nav-link" href="{{ url_for('admin.index') }}">
-            <i class="bi bi-terminal"></i> Admin
-          </a>
-        </li>
+          <li class="nav-item ms-3">
+            <a class="nav-link" href="{{ url_for('admin.index') }}">
+              <i class="bi bi-terminal"></i> Admin
+            </a>
+          </li>
         {% endif %}
       </ul>
 
@@ -54,8 +70,11 @@
         </a>
 
         {% if current_user.is_authenticated %}
-          <span class="navbar-text me-2 d-none d-md-inline">Connecté : {{ current_user.username }}</span>
-          <a class="nav-link logout-link d-none d-md-inline" href="{{ url_for('public.logout') }}" title="Se déconnecter">
+          <span class="navbar-text me-2 d-none d-md-inline">
+            Connecté : {{ current_user.username }}
+          </span>
+          <a class="nav-link logout-link d-none d-md-inline"
+             href="{{ url_for('public.logout') }}" title="Se déconnecter">
             <i class="bi bi-box-arrow-right fs-5 ms-2"></i>
           </a>
         {% elif form %}

@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block page_title %}Pilotage{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+  <div class="card mb-3 p-3">
+    <h4>Pilotage</h4>
+    <button id="start-stop-btn" class="btn btn-primary mb-3">
+      <i class="bi bi-play-fill"></i> Démarrer/Arrêter
+    </button>
+    <label for="mode-selector">Mode :</label>
+    <select id="mode-selector" class="form-select mb-3">
+      <option value="manuel">Manuel</option>
+      <option value="auto">Automatique</option>
+      <option value="simu" selected>Simulation</option>
+    </select>
+    <button id="reset-sensors-btn" class="btn btn-warning w-100">
+      <i class="bi bi-arrow-counterclockwise"></i> Reset capteurs
+    </button>
+  </div>
+  <div class="card p-3">
+    <h4>Journal d’activité</h4>
+    <div id="activity-log" style="max-height:260px;overflow:auto;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
+<script src="{{ url_for('static', filename='build/dash-pilotage.bundle.js') }}"></script>
+{% endblock %}

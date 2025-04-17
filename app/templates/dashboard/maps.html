@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block page_title %}Carte interactive{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="row g-3">
+    <div class="col-12 col-lg-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <h4>Trajectoire</h4>
+          <canvas id="vehicleTrackCanvas" class="dash-canvas"></canvas>
+          <div class="row text-center pt-2">
+            <div class="col">
+              <small>Vitesse</small><br>
+              <span id="current-speed" class="fw-bold">--</span> km/h
+            </div>
+            <div class="col">
+              <small>Distance</small><br>
+              <span id="distance-traveled" class="fw-bold">--</span> m
+            </div>
+            <div class="col">
+              <small>Direction</small><br>
+              <span id="vehicle-direction" class="fw-bold">--</span>
+            </div>
+            <div class="col">
+              <small>Tours</small><br>
+              <span id="lap-count" class="fw-bold">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body d-flex flex-column">
+          <h4>Flux caméra</h4>
+          <img id="cameraStream"
+               src="https://via.placeholder.com/800x600?text=Caméra"
+               class="img-fluid flex-grow-1 rounded" alt="Flux">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
+<script src="{{ url_for('static', filename='build/dash-maps.bundle.js') }}"></script>
+{% endblock %}

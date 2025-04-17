@@ -8,7 +8,7 @@
       <div class="col-md-9">
         <h1 class="mt-4">Interface de supervision</h1>
         <p class="lead">
-          Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
+          Projet réalisé dans le cadre du <strong>concours national de robotique inter-IUT de Cachan</strong> par l’IUT Lyon 1.
         </p>
         <p class="mb-4">
           <a class="btn btn-outline-info" href="{{ url_for('public.reglement_pdf') }}" target="_blank">
@@ -23,50 +23,63 @@
 <!-- Accès aux modules -->
 <div class="container">
   <div class="row">
-    <!-- Dashboard -->
+    <!-- Carte interactive -->
     <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-camera-video"></i> Dashboard</h3>
-      <p>Caméra embarquée, vue du circuit et statistiques de course en direct.</p>
+      <h3><i class="bi me-1 bi-map"></i> Carte interactive</h3>
+      <p>Visualisez la position du robot en temps réel sur une carte interactive.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('dashboard.index') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('dashboard') }}">
-          Accéder au dashboard &raquo;
+           href="{{ url_for('dashboard.maps') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('dashboard')) }}">
+          Accéder à la carte &raquo;
         </a>
       </p>
     </div>
 
-    <!-- Pilotage -->
+    <!-- Statistiques -->
+    <div class="col-lg-4">
+      <h3><i class="bi me-1 bi-bar-chart"></i> Statistiques</h3>
+      <p>Consultez les statistiques de performance et les indicateurs clés en direct.</p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('dashboard') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('dashboard.stats') if current_user.is_authenticated and current_user.has_permission('dashboard') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('dashboard')) }}">
+          Accéder aux statistiques &raquo;
+        </a>
+      </p>
+    </div>
+
+    <!-- Pilotage manuel -->
     <div class="col-lg-4">
       <h3><i class="bi me-1 bi-controller"></i> Pilotage manuel</h3>
       <p>Pilotage en direct via manette — idéal pour les tests et réglages du robot.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('pilotage') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('pilotage.index') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('pilotage') }}">
+           href="{{ url_for('dashboard.pilotage') if current_user.is_authenticated and current_user.has_permission('pilotage') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('pilotage')) }}">
           Piloter le robot &raquo;
-        </a>
-      </p>
-    </div>
-
-    <!-- Historique -->
-    <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-clock-history"></i> Historique des courses</h3>
-      <p>Analyse des courses précédentes : chronos, trajectoires et évolutions.</p>
-      <p>
-        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('historique') else 'btn-outline-secondary disabled text-muted' }}"
-           href="{{ url_for('public.historique') if current_user.is_authenticated and current_user.has_permission('historique') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('historique') }}">
-          Voir l'historique &raquo;
         </a>
       </p>
     </div>
   </div>
 
   <div class="row mt-5">
-    <!-- Profil -->
+    <!-- Historique des courses -->
     <div class="col-lg-4">
-      <h3><i class="bi me-1 bi-person"></i> Profil utilisateur</h3>
+      <h3><i class="bi me-1 bi-clock-history"></i> Historique des courses</h3>
+      <p>Analyse des courses précédentes : chronos, trajectoires et évolutions.</p>
+      <p>
+        <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('historique') else 'btn-outline-secondary disabled text-muted' }}"
+           href="{{ url_for('public.historique') if current_user.is_authenticated and current_user.has_permission('historique') else '#' }}"
+           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('historique')) }}">
+          Voir l'historique &raquo;
+        </a>
+      </p>
+    </div>
+
+    <!-- Profil utilisateur -->
+    <div class="col-lg-4">
+      <h3><i class="bi me-1 bi-person-circle"></i> Profil utilisateur</h3>
       <p>Gérez vos informations personnelles et consultez vos permissions d'accès aux différents modules.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated else 'btn-outline-secondary disabled text-muted' }}"
@@ -77,20 +90,22 @@
       </p>
     </div>
 
-    <!-- Admin -->
+    <!-- Console d'administration -->
     <div class="col-lg-4">
       <h3><i class="bi me-1 bi-terminal"></i> Console d'administration</h3>
       <p>Accédez aux outils de gestion et à la configuration du système. Réservé aux administrateurs.</p>
       <p>
         <a class="btn {{ 'btn-outline-primary' if current_user.is_authenticated and current_user.has_permission('admin') else 'btn-outline-secondary disabled text-muted' }}"
            href="{{ url_for('admin.index') if current_user.is_authenticated and current_user.has_permission('admin') else '#' }}"
-           tabindex="-1" aria-disabled="{{ not current_user.is_authenticated or not current_user.has_permission('admin') }}">
+           tabindex="-1" aria-disabled="{{ not (current_user.is_authenticated and current_user.has_permission('admin')) }}">
           Accéder à la console &raquo;
         </a>
       </p>
     </div>
+  </div>
 
-    <div class="col-lg-4">
+  <div class="row mt-5">
+    <div class="col-lg-4 offset-lg-4">
       {% if not current_user.is_authenticated %}
         <h3><i class="bi me-1 bi-person-plus"></i> Créer un compte</h3>
         <p>Inscrivez-vous pour accéder à toutes les fonctionnalités de l'interface.</p>

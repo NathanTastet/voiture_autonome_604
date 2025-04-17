@@ -52,7 +52,6 @@ def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(public.views.blueprint)
     app.register_blueprint(public.dashboard_views.dashboard_bp)
-    app.register_blueprint(public.pilotage_views.pilotage_bp)
     app.register_blueprint(user.views.blueprint)
     app.register_blueprint(user.admin_views.admin_bp)
     return None
