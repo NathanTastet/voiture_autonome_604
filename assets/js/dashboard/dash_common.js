@@ -61,8 +61,9 @@ export function startPingLoop() {
 export function setupStartStopControl() {
   const btnMain  = document.getElementById("start-stop-btn");
   const btnFloat = document.getElementById("start-stop-floating-btn");
+  window.isRunning = false;
   let running = false;
-
+  
   function updateButtons() {
     const label = running ? "Arrêter" : "Démarrer";
     const icon  = running ? "stop-fill" : "play-fill";

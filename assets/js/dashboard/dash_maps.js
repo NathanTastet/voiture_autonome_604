@@ -1,56 +1,54 @@
-// assets/js/dashboard/dash_graphs.js
+// assets/js/dashboard/dash_maps.js
 import { setText } from "./dash_common.js";
 
-//
 // ─── CONST ────────────────────────────────────────────────────────────────────
-//
 const MAX_TAIL_POINTS   = 500;
 const SIM_STEP_MS       = 50;
 const WORLD_MAX         = 1000;
-const JITTER_MAX        = 0.3;
 const LINE_MIN_X        = WORLD_MAX/2 - 5;
 const LINE_MAX_X        = WORLD_MAX/2 + 5;
-
 const MIN_LAP_MS        = 20000;
 const MAX_LAP_MS        = 40000;
 const NUM_LAPS          = 5;
 const OUTLINE_STEPS     = 300;
-
 const CTRL_POINT_COUNT  = 8;
 const CTRL_JITTER       = 20;
 
-//
 // ─── ÉTAT GLOBAL ──────────────────────────────────────────────────────────────
-//
 let trackData      = [];
 let incomingPoints = [];
-
 let interpPrev     = { x:0, y:0 };
 let interpNext     = null;
 let interpStartTs  = 0;
 let currentPos     = { x: WORLD_MAX/2, y: WORLD_MAX/2 };
 let lastAngleRad   = 0;
 let simPos         = { ...currentPos };
-
 let lapConfigs     = [];
 let currentLap     = 0;
 let lapProgress    = 0;
 let lapCount       = 0;
 let lastCrossTs    = 0;
-
 let hoverInfo      = { lap: null, x:0, y:0 };
-
 let zoom           = { scale:1, offX:0, offY:0 };
 let targetZoom     = { scale:1, offX:0, offY:0 };
 
-//
-// ─── BOUCLE PRINCIPALE & SIMULATION DÉCOUPLÉE ─────────────────────────────────
-//
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById("vehicleTrackCanvas");
-  const ctx    = canvas.getContext("2d");
-  const dpr    = window.devicePixelRatio || 1;
+  const canvas       = document.getElementById("vehicleTrackCanvas");
+  const modeSelector = document.getElementById("mode-selector");
+  const startBtn     = document.getElementById("start-stop-btn");
+  if (!canvas) {
+    console.error("Canvas #vehicleTrackCanvas non trouvé");
+    return;
+  }
+  if (!modeSelector) {
+    console.error("Sélecteur #mode-selector non trouvé");
+    return;
+  }
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
 
+  // Redimensionnement
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
     canvas.width  = rect.width  * dpr;
@@ -60,25 +58,48 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("resize", resizeCanvas);
   resizeCanvas();
 
+  // Génération des pistes
   generateLapConfigs();
 
-  // Simulation constante (même hors focus)
+  // État de simulation
+  window.isRunning = false;
+  function updateStartBtn() {
+    if (modeSelector.value === "real") {
+      startBtn.disabled = true;
+      startBtn.innerHTML = `<i class=\"bi bi-play-fill\"></i> Démarrer`;
+      window.isRunning = false;
+    } else {
+      startBtn.disabled = false;
+      startBtn.innerHTML = window.isRunning
+        ? `<i class=\"bi bi-stop-fill\"></i> Stop`
+        : `<i class=\"bi bi-play-fill\"></i> Démarrer`;
+    }
+  }
+
+  modeSelector.addEventListener("change", updateStartBtn);
+  startBtn.addEventListener("click", () => {
+    if (modeSelector.value !== "simu") return;
+    window.isRunning = !window.isRunning;
+    updateStartBtn();
+  });
+  updateStartBtn(); // état initial
+
+  // Simulation continue
   setInterval(() => {
-    if (document.getElementById("mode-selector").value === "simu") {
+    if (modeSelector.value === "simu" && window.isRunning) {
       simulateStep(SIM_STEP_MS);
     }
   }, SIM_STEP_MS);
 
-  // Hover pour anciens tours
+  // Hover
   canvas.addEventListener("mousemove", e => handleHover(e, canvas));
 
   // Rendu
   let lastTs = performance.now();
   function frame(ts) {
-    const dt = ts - lastTs;
-    lastTs = ts;
+    const dt = ts - lastTs; lastTs = ts;
 
-    // interpolation pour lissage
+    // Lissage
     if (!interpNext && incomingPoints.length) {
       interpPrev    = { ...simPos };
       interpNext    = incomingPoints.shift();
@@ -94,21 +115,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     checkLapCross(currentPos.x, currentPos.y, ts);
-
     updateTargetZoom(canvas.clientWidth, canvas.clientHeight);
     zoom.scale += (targetZoom.scale - zoom.scale) * 0.1;
     zoom.offX  += (targetZoom.offX  - zoom.offX) * 0.1;
     zoom.offY  += (targetZoom.offY  - zoom.offY) * 0.1;
-
     drawAll(ctx, canvas.clientWidth, canvas.clientHeight);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
 });
 
-//
 // ─── GÉNÉRATION DES CIRCUITS ───────────────────────────────────────────────────
-//
 function generateLapConfigs() {
   const ctrl = [];
   for (let i = 0; i < CTRL_POINT_COUNT; i++) {

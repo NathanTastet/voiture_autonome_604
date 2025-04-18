@@ -11,6 +11,21 @@
           <canvas id="vehicleTrackCanvas" class="dash-canvas"></canvas>
           <div class="row text-center pt-2">
             <div class="col">
+                  <button
+                    id="start-stop-btn"
+                    class="btn btn-primary w-100 mb-2"
+                    {% if not current_user.has_permission('pilotage')%}disabled{% endif %}
+                  >
+                    <i class="bi bi-play-fill"></i>
+                    Démarrer
+                  </button>
+                    <label for="mode-selector" class="form-label">Mode :</label>
+                    <select id="mode-selector" class="form-select">
+                    <option value="simu">Simulation</option>
+                    <option value="real">Réal</option>
+                    </select>
+            </div>
+            <div class="col">
               <small>Vitesse</small><br>
               <span id="current-speed" class="fw-bold">--</span> km/h
             </div>

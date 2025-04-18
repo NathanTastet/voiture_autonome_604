@@ -141,3 +141,23 @@ def vehicle_ping():
 def log_disconnect():
     current_user.log_connection("dashboard", "déconnexion")
     return jsonify({"status": "logged"})
+
+@dashboard_bp.route("/mode", methods=["POST"])
+@login_required
+@permission_required("dashboard")
+def mode():
+    data = request.get_json(silent=True) or {}
+    mode = data.get("mode")
+    if mode in ["simu", "real"]:
+        session["dashboard_mode"] = mode
+        return jsonify({"status": "ok", "mode": mode})
+    return jsonify({"status": "error", "message": "Mode invalide"}), 400
+
+@dashboard_bp.route("/disconnect", methods=["POST"])
+@login_required
+@permission_required("dashboard")
+def disconnect():
+    session.pop("dashboard_connected", None)
+    session.pop("dashboard_mode", None)
+    current_user.log_connection("dashboard", "déconnexion")
+    return jsonify({"status": "ok"})
