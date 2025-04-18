@@ -32,23 +32,51 @@ let hoverInfo      = { lap: null, x:0, y:0 };
 let zoom           = { scale:1, offX:0, offY:0 };
 let targetZoom     = { scale:1, offX:0, offY:0 };
 
+// Pour freinage progressif
+let speedFactor    = 0;
+// Boîte englobante de tous les tours
+let boundingBoxAll = { minX: WORLD_MAX, maxX: 0, minY: WORLD_MAX, maxY: 0 };
+// Tableau des temps de tours
+let lapTimes       = [];
+
+// ─── UTILITAIRES ──────────────────────────────────────────────────────────────
+function formatTime(ms) {
+  const s  = Math.floor(ms/1000);
+  const cs = Math.floor((ms%1000)/10);
+  return `${s}s ${cs}cs`;
+}
+
+function renderLapTimes() {
+  const listElem  = document.getElementById("lap-times-list");
+  const totalElem = document.getElementById("lap-times-total");
+  if (!listElem || !totalElem) return;
+  listElem.innerHTML = "";
+  let total = 0;
+  lapTimes.forEach((t, i) => {
+    total += t;
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    li.textContent = `Tour ${i+1} : ${formatTime(t)}`;
+    li.dataset.lap = i;
+    li.addEventListener("mouseenter", () => { hoverInfo.lap = i; });
+    li.addEventListener("mouseleave", () => { hoverInfo.lap = null; });
+    listElem.appendChild(li);
+  });
+  totalElem.textContent = `Total : ${formatTime(total)}`;
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   const canvas       = document.getElementById("vehicleTrackCanvas");
   const modeSelector = document.getElementById("mode-selector");
   const startBtn     = document.getElementById("start-stop-btn");
-  if (!canvas) {
-    console.error("Canvas #vehicleTrackCanvas non trouvé");
-    return;
-  }
-  if (!modeSelector) {
-    console.error("Sélecteur #mode-selector non trouvé");
+  if (!canvas || !modeSelector) {
+    console.error("#vehicleTrackCanvas ou #mode-selector introuvable");
     return;
   }
   const ctx = canvas.getContext("2d");
   const dpr = window.devicePixelRatio || 1;
 
-  // Redimensionnement
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
     canvas.width  = rect.width  * dpr;
@@ -58,48 +86,51 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("resize", resizeCanvas);
   resizeCanvas();
 
-  // Génération des pistes
   generateLapConfigs();
 
-  // État de simulation
   window.isRunning = false;
+  speedFactor = 0;
+
   function updateStartBtn() {
     if (modeSelector.value === "real") {
       startBtn.disabled = true;
-      startBtn.innerHTML = `<i class=\"bi bi-play-fill\"></i> Démarrer`;
+      startBtn.innerHTML = `<i class="bi bi-play-fill"></i> Démarrer`;
       window.isRunning = false;
     } else {
       startBtn.disabled = false;
       startBtn.innerHTML = window.isRunning
-        ? `<i class=\"bi bi-stop-fill\"></i> Stop`
-        : `<i class=\"bi bi-play-fill\"></i> Démarrer`;
+        ? `<i class="bi bi-stop-fill"></i> Stop`
+        : `<i class="bi bi-play-fill"></i> Démarrer`;
     }
   }
-
   modeSelector.addEventListener("change", updateStartBtn);
   startBtn.addEventListener("click", () => {
     if (modeSelector.value !== "simu") return;
     window.isRunning = !window.isRunning;
     updateStartBtn();
   });
-  updateStartBtn(); // état initial
+  updateStartBtn();
 
-  // Simulation continue
+  // Simulation + freinage progressif
   setInterval(() => {
-    if (modeSelector.value === "simu" && window.isRunning) {
-      simulateStep(SIM_STEP_MS);
+    if (modeSelector.value === "simu") {
+      speedFactor = window.isRunning
+        ? 1
+        : Math.max(0, speedFactor * 0.95);
+      simulateStep(SIM_STEP_MS * speedFactor);
     }
   }, SIM_STEP_MS);
 
-  // Hover
+  // Hover sur canvas
   canvas.addEventListener("mousemove", e => handleHover(e, canvas));
 
   // Rendu
   let lastTs = performance.now();
   function frame(ts) {
-    const dt = ts - lastTs; lastTs = ts;
+    const dt = ts - lastTs;
+    lastTs = ts;
 
-    // Lissage
+    // Interpolation
     if (!interpNext && incomingPoints.length) {
       interpPrev    = { ...simPos };
       interpNext    = incomingPoints.shift();
@@ -117,9 +148,10 @@ document.addEventListener("DOMContentLoaded", () => {
     checkLapCross(currentPos.x, currentPos.y, ts);
     updateTargetZoom(canvas.clientWidth, canvas.clientHeight);
     zoom.scale += (targetZoom.scale - zoom.scale) * 0.1;
-    zoom.offX  += (targetZoom.offX  - zoom.offX) * 0.1;
-    zoom.offY  += (targetZoom.offY  - zoom.offY) * 0.1;
+    zoom.offX  += (targetZoom.offX  - zoom.offX ) * 0.1;
+    zoom.offY  += (targetZoom.offY  - zoom.offY ) * 0.1;
     drawAll(ctx, canvas.clientWidth, canvas.clientHeight);
+
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -130,8 +162,11 @@ function generateLapConfigs() {
   const ctrl = [];
   for (let i = 0; i < CTRL_POINT_COUNT; i++) {
     const theta = (i / CTRL_POINT_COUNT) * 2 * Math.PI;
-    const R = 200 + (Math.random() * 50 - 25);
-    ctrl.push({ x: WORLD_MAX/2 + Math.cos(theta) * R, y: WORLD_MAX/2 + Math.sin(theta) * R });
+    const R     = 200 + (Math.random() * 50 - 25);
+    ctrl.push({
+      x: WORLD_MAX/2 + Math.cos(theta) * R,
+      y: WORLD_MAX/2 + Math.sin(theta) * R
+    });
   }
   const base = catmullRomPath(ctrl, OUTLINE_STEPS);
 
@@ -153,7 +188,7 @@ function generateLapConfigs() {
 
 function catmullRomPath(points, samples) {
   const out = [];
-  const n = points.length;
+  const n   = points.length;
   const seg = Math.ceil(samples / n);
   for (let i = 0; i < n; i++) {
     const p0 = points[(i - 1 + n) % n];
@@ -202,7 +237,7 @@ function getPointOnPath(cfg, t) {
 function simulateStep(dt) {
   const cfg = lapConfigs[currentLap];
   lapProgress += dt;
-  const t = Math.min(1, lapProgress / cfg.duration);
+  const t   = Math.min(1, lapProgress / cfg.duration);
   const pos = getPointOnPath(cfg, t);
 
   simPos = { ...pos };
@@ -212,6 +247,12 @@ function simulateStep(dt) {
   incomingPoints.push(pos);
   trackData.push(pos);
 
+  // Mise à jour de la boîte englobante totale
+  boundingBoxAll.minX = Math.min(boundingBoxAll.minX, pos.x);
+  boundingBoxAll.maxX = Math.max(boundingBoxAll.maxX, pos.x);
+  boundingBoxAll.minY = Math.min(boundingBoxAll.minY, pos.y);
+  boundingBoxAll.maxY = Math.max(boundingBoxAll.maxY, pos.y);
+
   setText("current-speed", ((cfg.totalLength / (cfg.duration / 1000)) * 3.6).toFixed(1));
   setText("distance-traveled", (lapProgress / 1000 * cfg.totalLength / (cfg.duration / 1000)).toFixed(1));
   setText("vehicle-direction", `${Math.round(lastAngleRad * 180 / Math.PI)}°`);
@@ -219,6 +260,8 @@ function simulateStep(dt) {
   if (lapProgress >= cfg.duration) {
     lapCount++;
     setText("lap-count", lapCount);
+    lapTimes.push(cfg.duration);
+    renderLapTimes();
     lapProgress = 0;
     currentLap = Math.min(currentLap + 1, NUM_LAPS - 1);
     trackData = [];
@@ -229,12 +272,12 @@ function simulateStep(dt) {
 function handleHover(e, canvas) {
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left - zoom.offX) / zoom.scale;
-  const my = (e.clientY - rect.top - zoom.offY) / zoom.scale;
+  const my = (e.clientY - rect.top  - zoom.offY) / zoom.scale;
   hoverInfo = { lap: null, x: e.offsetX, y: e.offsetY };
   for (let i = 0; i < currentLap; i++) {
     const pts = lapConfigs[i].points;
     for (let j = 1; j < pts.length; j++) {
-      if (distanceToSegment(mx, my, pts[j - 1], pts[j]) < 5 / zoom.scale) {
+      if (distanceToSegment(mx, my, pts[j-1], pts[j]) < 5 / zoom.scale) {
         hoverInfo.lap = i;
         return;
       }
@@ -248,6 +291,7 @@ function drawAll(ctx, w, h) {
     ctx.translate(zoom.offX, zoom.offY);
     ctx.scale(zoom.scale, zoom.scale);
 
+    // anciens tours
     lapConfigs.slice(0, currentLap).forEach((cfg, idx) => {
       ctx.save();
         ctx.lineWidth = 2 / zoom.scale;
@@ -258,10 +302,12 @@ function drawAll(ctx, w, h) {
         const P = cfg.points;
         ctx.moveTo(P[0].x, P[0].y);
         P.forEach(p => ctx.lineTo(p.x, p.y));
-        ctx.closePath(); ctx.stroke();
+        ctx.closePath();
+        ctx.stroke();
       ctx.restore();
     });
 
+    // trajectoire courante
     if (trackData.length > 2) {
       ctx.save();
         ctx.strokeStyle = "#6C63FF";
@@ -270,15 +316,16 @@ function drawAll(ctx, w, h) {
         const D = trackData;
         ctx.moveTo(D[0].x, D[0].y);
         for (let i = 1; i < D.length - 1; i++) {
-          const xc = (D[i].x + D[i + 1].x) / 2; const yc = (D[i].y + D[i + 1].y) / 2;
+          const xc = (D[i].x + D[i+1].x) / 2;
+          const yc = (D[i].y + D[i+1].y) / 2;
           ctx.quadraticCurveTo(D[i].x, D[i].y, xc, yc);
         }
-        ctx.lineTo(D[D.length - 1].x, D[D.length - 1].y);
+        ctx.lineTo(D[D.length-1].x, D[D.length-1].y);
         ctx.stroke();
       ctx.restore();
     }
 
-    // Triangle voiture
+    // triangle voiture
     ctx.save();
       ctx.translate(simPos.x, simPos.y);
       ctx.rotate(lastAngleRad);
@@ -287,10 +334,12 @@ function drawAll(ctx, w, h) {
       ctx.moveTo(0, -7 / zoom.scale);
       ctx.lineTo(12 / zoom.scale, 0);
       ctx.lineTo(0, 7 / zoom.scale);
-      ctx.closePath(); ctx.fill();
+      ctx.closePath();
+      ctx.fill();
     ctx.restore();
   ctx.restore();
 
+  // label au hover
   if (hoverInfo.lap != null) {
     ctx.save();
       ctx.resetTransform();
@@ -301,36 +350,55 @@ function drawAll(ctx, w, h) {
   }
 }
 
+function updateTargetZoom(w, h) {
+  let box;
+  if (lapCount > 0) {
+    // zoom sur tous les tours effectués
+    box = { ...boundingBoxAll };
+  } else {
+    // zoom sur trajectoire en cours
+    const xs = trackData.map(p => p.x).concat(simPos.x);
+    const ys = trackData.map(p => p.y).concat(simPos.y);
+    box = {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys)
+    };
+  }
+  // clamp sur le monde
+  box.minX = clamp(box.minX, 0, WORLD_MAX);
+  box.maxX = clamp(box.maxX, 0, WORLD_MAX);
+  box.minY = clamp(box.minY, 0, WORLD_MAX);
+  box.maxY = clamp(box.maxY, 0, WORLD_MAX);
+
+  const padX = (box.maxX - box.minX) * 0.1 || 1;
+  const padY = (box.maxY - box.minY) * 0.1 || 1;
+  box.minX -= padX; box.maxX += padX;
+  box.minY -= padY; box.maxY += padY;
+
+  const scale = Math.min(w / (box.maxX - box.minX), h / (box.maxY - box.minY));
+  const offX  = (w - (box.maxX - box.minX) * scale) / 2 - box.minX * scale;
+  const offY  = (h - (box.maxY - box.minY) * scale) / 2 - box.minY * scale;
+  targetZoom = { scale, offX, offY };
+}
+
 function checkLapCross(x, y, ts) {
   if (x > LINE_MIN_X && x < LINE_MAX_X && ts - lastCrossTs > 1000) {
     lastCrossTs = ts;
   }
 }
 
-function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
+function clamp(v, min, max) {
+  return v < min ? min : v > max ? max : v;
+}
 
 function distanceToSegment(x, y, a, b) {
   const dx = b.x - a.x, dy = b.y - a.y;
-  const t = ((x - a.x) * dx + (y - a.y) * dy) / (dx*dx + dy*dy);
+  const t  = ((x - a.x) * dx + (y - a.y) * dy) / (dx*dx + dy*dy);
   const tt = Math.max(0, Math.min(1, t));
   const px = a.x + dx * tt, py = a.y + dy * tt;
   return Math.hypot(x - px, y - py);
-}
-
-function updateTargetZoom(w, h) {
-  const xs = trackData.map(p => p.x).concat(simPos.x);
-  const ys = trackData.map(p => p.y).concat(simPos.y);
-  let minX = Math.min(...xs), maxX = Math.max(...xs);
-  let minY = Math.min(...ys), maxY = Math.max(...ys);
-  minX = clamp(minX, 0, WORLD_MAX); maxX = clamp(maxX, 0, WORLD_MAX);
-  minY = clamp(minY, 0, WORLD_MAX); maxY = clamp(maxY, 0, WORLD_MAX);
-  const padX = (maxX - minX) * 0.1 || 1;
-  const padY = (maxY - minY) * 0.1 || 1;
-  minX -= padX; maxX += padX; minY -= padY; maxY += padY;
-  const scale = Math.min(w/(maxX-minX), h/(maxY-minY));
-  const offX = (w - (maxX-minX)*scale)/2 - minX*scale;
-  const offY = (h - (maxY-minY)*scale)/2 - minY*scale;
-  targetZoom = { scale, offX, offY };
 }
 
 function updateMetrics(d) {
