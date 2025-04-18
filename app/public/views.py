@@ -8,7 +8,8 @@ from flask import (
     render_template,
     request,
     url_for,
-    g
+    g,
+    session,
 )
 from flask_login import login_required, login_user, logout_user
 
@@ -17,8 +18,6 @@ from app.public.forms import LoginForm
 from app.user.forms import RegisterForm
 from app.user.models import User
 from app.utils import flash_errors
-
-
 
 blueprint = Blueprint("public", __name__, static_folder="../static")
 
@@ -39,18 +38,32 @@ def load_user(user_id):
 
 @blueprint.route("/", methods=["GET", "POST"])
 def home():
-    """Page d'accueil."""
+    """Page d'accueil / login."""
     form = LoginForm(request.form)
     current_app.logger.info("Bienvenue sur la page d'accueil !")
+
+    # On récupère `next` soit en GET (query string), soit en POST (champ caché)
+    next_page = request.args.get("next") or request.form.get("next")
+
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
             flash("Connexion réussie.", "success")
-            redirect_url = request.args.get("next") or url_for("public.home")
-            return redirect(redirect_url)
+
+            # On vide les anciens indicateurs du dashboard
+            session.pop("dashboard_connected", None)
+            session.pop("dashboard_next", None)
+
+            # Redirection sécurisée vers la route interne, ou vers /dashboard/connect
+            if next_page and next_page.startswith("/dashboard"):
+                return redirect(next_page)
+            return redirect(url_for("dashboard.connect"))
         else:
             flash_errors(form)
-    return render_template("public/home.html")
+
+    # On transmet `next` au template pour le form caché
+    return render_template("public/home.html", next=next_page)
+
 
 @blueprint.route("/logout/")
 @login_required
@@ -58,7 +71,13 @@ def logout():
     """Déconnexion."""
     logout_user()
     flash("Déconnexion effectuée.", "info")
+
+    # On vide aussi les indicateurs dashboard
+    session.pop("dashboard_connected", None)
+    session.pop("dashboard_next", None)
+
     return redirect(url_for("public.home"))
+
 
 @blueprint.route("/register/", methods=["GET", "POST"])
 def register():

@@ -1,9 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-
-/*
- * Webpack Plugins
- */
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const ProductionPlugins = [
@@ -21,14 +18,16 @@ module.exports = {
   context: __dirname,
   entry: {
     main_js: './assets/js/main',
-    pilotage: './assets/js/pilotage', 
+    pilotage: './assets/js/pilotage',
     // ---- Dashboard split ----
     "dash-common":  "./assets/js/dashboard/dash_common.js",
     "dash-connect": "./assets/js/dashboard/dash_connect.js",
-    "dash-graphs":  "./assets/js/dashboard/dash_graphs.js",
+    "dash-maps":  "./assets/js/dashboard/dash_maps.js",
+    "dash-pilotage":  "./assets/js/dashboard/dash_pilotage.js",
+    "dash-stats":  "./assets/js/dashboard/dash_stats.js",
     main_css: [
       path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free', 'css', 'all.css'),
-      path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), //custom bootstrap en dernier
+      path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), // custom bootstrap en dernier
     ],
   },
   mode: debug,
@@ -44,7 +43,15 @@ module.exports = {
   devtool: debug ? "eval-source-map" : false,
   plugins: [
     new MiniCssExtractPlugin({ filename: "[name].bundle.css" }),
-    new webpack.ProvidePlugin({ $: "jquery", jQuery: "jquery" })
+    new webpack.ProvidePlugin({ $: "jquery", jQuery: "jquery" }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'assets/fonts'),
+          to: 'fonts' // Résultat : app/static/build/fonts/
+        }
+      ]
+    })
   ].concat(debug ? [] : ProductionPlugins),
   module: {
     rules: [
@@ -76,7 +83,7 @@ module.exports = {
         test: /\.(woff(2)?|eot|ttf|otf|svg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'fonts/[name][ext]'  // ça crée app/static/build/fonts/
+          filename: 'fonts/[name][ext]' // fallback aussi si d'autres polices sont importées via url()
         }
       },
       {
@@ -100,6 +107,6 @@ module.exports = {
 
   // ✅ Masquer les warnings Sass de Bootstrap (sans bloquer les vrais logs)
   infrastructureLogging: {
-    level: 'error'  // ou 'warn' pour garder les warnings importants
+    level: 'error'  // ou 'warn' si tu veux voir + de logs
   }
 };

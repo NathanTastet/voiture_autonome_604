@@ -4,10 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <link rel="shortcut icon" href="{{ static_url_for('static', filename='build/favicon.ico') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
-  <title>{% block page_title %}Robot IUT Lyon 1{% endblock %}</title>
-
+  <title>{% block page_title %}Robot IUT Lyon 1{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}{% endblock %}" />
   <meta name="author" content="{% block meta_author %}{% endblock %}" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,7 +18,11 @@
 <body class="d-flex flex-column min-vh-100 {% block body_class %}{% endblock %}">
   {% block body %}
 
-    {% with form=form %}
+    {# 1. On récupère `next` depuis la query string #}
+    {% set next_param = request.args.get('next', '') %}
+
+    {# 2. On inclut la navbar en lui passant `form` et `next` #}
+    {% with form=form, next=next_param %}
       {% include "nav.html" %}
     {% endwith %}
 

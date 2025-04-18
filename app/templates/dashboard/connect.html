@@ -20,7 +20,6 @@
     <h1 class="fw">Bienvenue sur le Dashboard</h1>
   </div>
 
-  <!-- Bloc connexion -->
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
       <div class="card p-3 shadow-sm">
@@ -45,7 +44,6 @@
 
           <hr class="my-3">
 
-          <!-- Statut connexion -->
           <div class="connection-status mb-3">
             <h5 class="fw-semibold">État de la connexion</h5>
             <div id="connection-status-text" class="fs-5 mt-2">
@@ -57,15 +55,21 @@
             </div>
           </div>
 
-          <!-- Actions -->
-          <div class="d-grid gap-2">
-            <button id="connect-btn" class="btn btn-success btn-lg" disabled>
-              <i class="bi bi-plug-fill me-1"></i> Se connecter
-            </button>
-            <button id="simulate-btn" class="btn btn-secondary btn-lg">
-              <i class="bi bi-cpu-fill me-1"></i> Simuler
-            </button>
-          </div>
+          <form method="POST">
+            <!-- Champ CSRF correctement injecté -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+            <div class="d-grid gap-2">
+              <button type="submit" name="action" value="connect"
+                      id="connect-btn" class="btn btn-success btn-lg" disabled>
+                <i class="bi bi-plug-fill me-1"></i> Se connecter
+              </button>
+              <button type="submit" name="action" value="simulate"
+                      id="simulate-btn" class="btn btn-secondary btn-lg">
+                <i class="bi bi-cpu-fill me-1"></i> Simuler
+              </button>
+            </div>
+          </form>
 
         </div>
       </div>

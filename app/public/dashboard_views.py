@@ -1,4 +1,3 @@
-# app/dashboard/dashboard_views.py
 from flask import (
     Blueprint, session, redirect, url_for,
     render_template, request, jsonify, g
@@ -9,12 +8,8 @@ from app.utils import permission_required
 import os, time
 from ping3 import ping
 
-
 dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Données de configuration & cache en mémoire
-# ──────────────────────────────────────────────────────────────────────────────
 connection_info = {
     "ip": os.getenv("ROBOT_IP", "192.168.1.100"),
     "mac": os.getenv("ROBOT_MAC", "00:00:00:00:00:00"),
@@ -23,7 +18,7 @@ connection_info = {
 def _default_payload():
     return {
         "timestamp": 0,
-        "mode": "simu",  # simu | manuel | auto
+        "mode": "simu",
         "track": [],
         "speed": 0,
         "distance": 0,
@@ -37,47 +32,43 @@ def _default_payload():
 
 LATEST_DATA = _default_payload()
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Hooks & helpers
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.before_request
 def load_theme():
     g.theme = request.cookies.get("theme", "dark")
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Redirection racine vers la config/connexion
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/")
 @login_required
 @permission_required("dashboard")
 def index():
     return redirect(url_for("dashboard.connect"))
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Page de connexion / configuration réseau
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/connect", methods=["GET", "POST"])
 @login_required
 @permission_required("dashboard")
 def connect():
     last_log = ConnectionLog.get_last_connectionlog("dashboard")
     if request.method == "POST":
+        action = request.form.get("action")
         session["dashboard_connected"] = True
+        session["dashboard_mode"] = "simu" if action == "simulate" else "real"
+
+        next_page = session.pop("dashboard_next", None)
+        if next_page and next_page.startswith("/dashboard"):
+            return redirect(next_page)
         return redirect(url_for("dashboard.maps"))
+
     return render_template(
         "dashboard/connect.html",
         config_connection=connection_info,
         last_connection=last_log,
     )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Carte interactive (Navigation)
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/maps")
 @login_required
 @permission_required("dashboard")
 def maps():
     if not session.get("dashboard_connected"):
+        session["dashboard_next"] = request.path
         return redirect(url_for("dashboard.connect"))
     current_user.log_connection("dashboard", "view_maps")
     return render_template(
@@ -85,14 +76,12 @@ def maps():
         config_connection=connection_info,
     )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Statistiques
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/stats")
 @login_required
 @permission_required("dashboard")
 def stats():
     if not session.get("dashboard_connected"):
+        session["dashboard_next"] = request.path
         return redirect(url_for("dashboard.connect"))
     current_user.log_connection("dashboard", "view_stats")
     return render_template(
@@ -100,23 +89,18 @@ def stats():
         config_connection=connection_info,
     )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Pilotage
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/pilotage")
 @login_required
 @permission_required("pilotage")
 def pilotage():
     if not session.get("dashboard_connected"):
+        session["dashboard_next"] = request.path
         return redirect(url_for("dashboard.connect"))
     return render_template(
         "dashboard/pilotage.html",
         config_connection=connection_info,
     )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# API temps réel
-# ──────────────────────────────────────────────────────────────────────────────
 @dashboard_bp.route("/vehicle/data", methods=["GET", "POST"])
 @login_required
 @permission_required("dashboard")

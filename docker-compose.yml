@@ -4,7 +4,7 @@ x-build-args: &build_args
 
 x-default-volumes: &default_volumes
   volumes:
-    - ./:/app
+    - ./:/app:delegated           # ton code source
     - node-modules:/app/node_modules
     - dev-data:/app/dev.db
 
@@ -57,5 +57,5 @@ services:
     <<: *default_volumes
 
 volumes:
-  node-modules:
-  dev-data:
+    node-modules: {} 
+    dev-data: {}    

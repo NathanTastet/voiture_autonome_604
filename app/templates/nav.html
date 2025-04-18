@@ -77,9 +77,15 @@
              href="{{ url_for('public.logout') }}" title="Se déconnecter">
             <i class="bi bi-box-arrow-right fs-5 ms-2"></i>
           </a>
-        {% elif form %}
-          <form class="form-inline d-flex" method="POST" action="{{ url_for('public.home') }}">
+          {% elif form %}
+          <form class="form-inline d-flex"
+                method="POST"
+                action="{{ url_for('public.home', next=next) }}">
+            <!-- CSRF token -->
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <!-- On transmet ici le next reçu en GET -->
+            <input type="hidden" name="next" value="{{ next }}" />
+        
             <div class="input-group me-2">
               {{ form.username(placeholder="Utilisateur", class_="form-control") }}
               {{ form.password(placeholder="Mot de passe", class_="form-control") }}
