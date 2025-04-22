@@ -101,11 +101,6 @@ def about():
     """Page À propos."""
     return render_template("public/about.html")
 
-@blueprint.route("/historique")
-@login_required
-def historique():
-    return render_template("public/historique.html")
-
 @blueprint.route("/reglement")
 def reglement_pdf():
     return render_template("public/reglement.html")

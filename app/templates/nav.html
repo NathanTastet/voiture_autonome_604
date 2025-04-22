@@ -40,8 +40,8 @@
 
         {% if current_user.is_authenticated and current_user.has_permission('historique') %}
           <li class="nav-item ms-3">
-            <a class="nav-link{% if request.endpoint=='public.historique' %} active{% endif %}"
-               href="{{ url_for('public.historique') }}">
+            <a class="nav-link{% if request.endpoint=='historique.home' %} active{% endif %}"
+               href="{{ url_for('historique.home') }}">
               <i class="bi bi-clock-history"></i> Historique
             </a>
           </li>

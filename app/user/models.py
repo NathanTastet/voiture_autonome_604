@@ -6,6 +6,7 @@ from flask_login import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.extensions import bcrypt, db
 import pytz
+from app.dashboard.models import ConnectionLog
 
 # Table d'association User <-> Permission
 user_permissions = db.Table(
@@ -31,39 +32,6 @@ class AccessRequest(db.Model):
     timestamp = db.Column(db.DateTime, default=dt.datetime.utcnow)
 
     user = db.relationship("User", back_populates="access_requests")
-
-class ConnectionLog(db.Model):
-    __tablename__ = "connection_logs"
-    id = db.Column(db.Integer, primary_key=True)
-
-    fonction = db.Column(db.String(50), nullable=False)  # dashboard, pilotage, etc.
-    type = db.Column(db.String(20), nullable=False)  # connexion ou déconnexion
-    connection_date = db.Column(db.DateTime, default=dt.datetime.utcnow, nullable=False)
-
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    user_name = db.Column(db.String(80), nullable=False)  # snapshot du nom d’utilisateur
-
-    def __repr__(self):
-        return f"<ConnectionLog({self.type} - {self.fonction} - {self.connection_date.strftime('%d/%m/%Y %H:%M')} - {self.user_name})>"
-
-    @classmethod
-    def get_last_connectionlog(cls, fonction):
-        """
-        Retourne le dernier log (tous utilisateurs confondus) pour une fonction donnée,
-        formaté à l'heure française.
-        """
-        log = (
-            cls.query
-            .filter_by(fonction=fonction)
-            .order_by(cls.connection_date.desc())
-            .first()
-        )
-        if log:
-            paris = pytz.timezone("Europe/Paris")
-            local_dt = log.connection_date.replace(tzinfo=pytz.utc).astimezone(paris)
-            return local_dt.strftime("Le %d/%m/%Y à %H:%M:%S par ") + log.user_name
-        return "Aucune"
-    
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
