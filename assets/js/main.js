@@ -5,7 +5,6 @@
  */
 
 // JavaScript modules
-require("@fortawesome/fontawesome-free");
 require("jquery");
 require("bootstrap");
 
@@ -18,5 +17,3 @@ require.context(
 
 // Your own code
 require("./theme-toggle");
-require("./plugins");
-require("./script");

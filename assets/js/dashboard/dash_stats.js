@@ -34,7 +34,7 @@ function updateBatteryHistory(value) {
 
   const ctx = document.getElementById("batteryHistory").getContext("2d");
   if (!historyChart) {
-    // Création du chart (Chart.js doit être chargé dans main_js.bundle ou via CDN)
+    // Création du chart (Chart.js doit être chargé)
     historyChart = new Chart(ctx, {
       type: "line",
       data: {
