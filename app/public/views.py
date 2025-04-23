@@ -1,42 +1,26 @@
 # -*- coding: utf-8 -*-
-"""Section publique, incluant la page d'accueil et l'inscription."""
-from flask import (
-    Blueprint,
-    current_app,
-    flash,
-    redirect,
-    render_template,
-    request,
-    url_for,
-    g,
-    session,
-)
-from flask_login import login_required, login_user, logout_user
+"""Public views."""
+from app.common.views import *
 
-from app.extensions import login_manager, db
-from app.public.forms import LoginForm
+from app.extensions import login_manager
 from app.user.forms import RegisterForm
 from app.user.models import User
-from app.utils import flash_errors
 
-blueprint = Blueprint("public", __name__, static_folder="../static")
+public_bp = Blueprint("public", __name__)
 
-@blueprint.before_request
+@public_bp.before_request
 def load_theme():
-    g.theme = request.cookies.get("theme", "dark")
+    _load_theme()
 
-@blueprint.app_context_processor
+@public_bp.app_context_processor
 def inject_globals():
-    return {
-        "theme": g.get("theme", "dark"),
-        "form": LoginForm()
-    }
+    return _inject_globals()
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.get_by_id(user_id)
 
-@blueprint.route("/", methods=["GET", "POST"])
+@public_bp.route("/", methods=["GET", "POST"])
 def home():
     """Page d'accueil / login."""
     form = LoginForm(request.form)
@@ -65,7 +49,7 @@ def home():
     return render_template("public/home.html", next=next_page)
 
 
-@blueprint.route("/logout/")
+@public_bp.route("/logout/")
 @login_required
 def logout():
     """Déconnexion."""
@@ -79,7 +63,7 @@ def logout():
     return redirect(url_for("public.home"))
 
 
-@blueprint.route("/register/", methods=["GET", "POST"])
+@public_bp.route("/register/", methods=["GET", "POST"])
 def register():
     """Inscription nouvel utilisateur."""
     form = RegisterForm(request.form)
@@ -96,11 +80,11 @@ def register():
         flash_errors(form)
     return render_template("public/register.html", form=form)
 
-@blueprint.route("/about/")
+@public_bp.route("/about/")
 def about():
     """Page À propos."""
     return render_template("public/about.html")
 
-@blueprint.route("/reglement")
+@public_bp.route("/reglement")
 def reglement_pdf():
     return render_template("public/reglement.html")

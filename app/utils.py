@@ -4,6 +4,7 @@ from flask import flash
 from functools import wraps
 from flask import request, g, flash, redirect, url_for
 from flask_login import current_user
+from datetime import datetime
 
 
 def flash_errors(form, category="warning"):
@@ -27,3 +28,15 @@ def permission_required(permission):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+def format_date(date, format="%d/%m/%Y %H:%M"):
+    """Format a date object to a string."""
+    if not date:
+        return ""
+    if isinstance(date, str):
+        try:
+            date = datetime.strptime(date, "%Y-%m-%d")
+        except ValueError:
+            return date
+    return date.strftime(format)

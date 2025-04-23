@@ -1,3 +1,4 @@
 # -*- coding: utf-8 -*-
 """Dashboard package."""
-from . import views, models
+from flask import Blueprint
+from .views import dashboard, historique

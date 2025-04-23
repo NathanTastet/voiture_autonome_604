@@ -1,28 +1,18 @@
 # -*- coding: utf-8 -*-
 """User views."""
-from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from flask_login import login_required, current_user
-
-from app.extensions import db
-from app.utils import flash_errors
+from app.common.views import *
 from app.user.forms import EditProfileForm
 from app.user.models import AccessRequest
 
+user_bp = Blueprint("user", __name__, url_prefix="/user")
 
-blueprint = Blueprint("user", __name__, url_prefix="/users", static_folder="../static")
-
-@blueprint.before_request
-def load_theme():
-    g.theme = request.cookies.get("theme", "dark")
-
-
-@blueprint.route("/profile/")
+@user_bp.route("/profile/")
 @login_required
 def profile():
     return render_template("users/profile.html")
 
 
-@blueprint.route("/edit_profile", methods=["GET", "POST"])
+@user_bp.route("/edit_profile", methods=["GET", "POST"])
 @login_required
 def edit_profile():
     form = EditProfileForm(obj=current_user)
@@ -41,7 +31,7 @@ def edit_profile():
     return render_template("users/edit_profile.html", form=form)
 
 
-@blueprint.route("/request_access/<permission>")
+@user_bp.route("/request_access/<permission>")
 @login_required
 def request_access(permission):
     valid_permissions = ['dashboard', 'pilotage', 'historique', 'admin']

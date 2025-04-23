@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Admin views for managing access requests and user permissions."""
-from flask import Blueprint, render_template, redirect, url_for, flash, g, request
-from flask_login import login_required, current_user
-from app.extensions import db
+"""Admin views."""
+from app.common.views import *
 from app.user.models import AccessRequest, User, Permission
-from app.utils import permission_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
-@admin_bp.before_request
-def load_theme():
-    g.theme = request.cookies.get("theme", "dark")
 
 @admin_bp.route("/", methods=["GET"])
 @login_required
@@ -150,4 +143,3 @@ def toggle_permission(user_id, perm_name):
     
     db.session.commit()
     return redirect(url_for("admin.index"))
-

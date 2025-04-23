@@ -6,6 +6,7 @@ import sys
 from flask import Flask, render_template
 
 from app import commands, public, user, dashboard
+from app.common.views import register_common
 from app.extensions import (
     bcrypt,
     cache,
@@ -26,6 +27,7 @@ def create_app(config_object="app.settings"):
     app = Flask(__name__.split(".")[0])
     app.config.from_object(config_object)
     register_extensions(app)
+    register_common(app)
     register_blueprints(app)
     register_errorhandlers(app)
     register_shellcontext(app)
@@ -50,11 +52,11 @@ def register_extensions(app):
 
 def register_blueprints(app):
     """Register Flask blueprints."""
-    app.register_blueprint(public.views.blueprint)
-    app.register_blueprint(dashboard.views.dashboard_bp)
-    app.register_blueprint(dashboard.views.historique_bp)
-    app.register_blueprint(user.views.blueprint)
-    app.register_blueprint(user.admin_views.admin_bp)
+    app.register_blueprint(public.views.public_bp)
+    app.register_blueprint(dashboard.views.dashboard.dashboard_bp)
+    app.register_blueprint(dashboard.views.historique.historique_bp)
+    app.register_blueprint(user.views.user.user_bp)
+    app.register_blueprint(user.views.admin.admin_bp)
     return None
 
 

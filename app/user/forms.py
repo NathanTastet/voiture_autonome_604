@@ -3,7 +3,7 @@
 from flask_wtf import FlaskForm
 from flask_login import current_user
 from werkzeug.security import check_password_hash
-from wtforms import PasswordField, StringField
+from wtforms import PasswordField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional
 
 from .models import User
