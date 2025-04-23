@@ -79,5 +79,7 @@ __all__ = [
     'os',
     'time',
     'flash',
-    'LoginForm'
+    'LoginForm',
+    'datetime',
+    'or_'
 ]

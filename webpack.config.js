@@ -27,7 +27,6 @@ module.exports = {
     "dash-stats":  "./assets/js/dashboard/dash_stats.js",
     "dashboard_history": "./assets/js/dashboard/dash_history.js",
     main_css: [
-      path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free', 'css', 'all.css'),
       path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), // custom bootstrap en dernier
     ],
   },
