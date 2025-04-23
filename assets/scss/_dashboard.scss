@@ -1,5 +1,6 @@
 /* app/static/scss/_dashboard.scss */
 
+/* Styles de base pour toutes les pages */
 /* Bouton start/stop */
 #start-stop-btn {
   margin-bottom: 20px;
@@ -16,7 +17,7 @@ canvas {
   margin-bottom: 10px;
 }
 
-/* Carte flottante en bas à gauche : plus large et moins haute */
+/* Carte flottante en bas à gauche */
 #floating-info-card {
   position: fixed;
   bottom: 20px;
@@ -58,7 +59,7 @@ canvas {
   font-family: $font-family-sans-serif;
 }
 
-/* Section statut de connexion dans connect.html */
+/* Section statut de connexion */
 .connection-status {
   border-radius: $border-radius;
   background-color: rgba($info, 0.05);
@@ -72,7 +73,7 @@ canvas {
   border-color: rgba($light, 0.05);
 }
 
-.gauge‑wrapper canvas {
+.gauge-wrapper canvas {
   width: 100% !important;
   height: auto !important;
 }
@@ -83,11 +84,301 @@ canvas {
 }
 
 .dash-canvas {
-  width:  100% !important;
+  width: 100% !important;
   height: 400px !important;
   display: block;
   border-radius: 0.5rem;
   background-color: #1e1f26;
+}
+
+/* Styles spécifiques pour les vues dashboard */
+.dashboard {
+  /* Conteneur principal avec prise en compte de la navbar */
+  .container-fluid {
+    max-height: calc(100vh - 64px);
+    overflow: hidden;
+    padding: 0.5rem;
+  }
+
+  /* Cartes du dashboard */
+  .card {
+    background-color: rgba($dark, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0;
+    
+    .card-body {
+      padding: 0.75rem;
+    }
+    
+    h5 {
+      font-size: 1.1rem;
+      margin-bottom: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: rgba($light, 0.95);
+    }
+
+    /* Séparateur sous les titres */
+    .card-title-separator {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, rgba($light, 0.2), rgba($light, 0.05));
+      margin: 0.75rem 0 1rem;
+    }
+  }
+
+  /* Jauges */
+  .gauge-wrapper {
+    position: relative;
+    width: 80%;
+    max-width: 300px;
+    padding-bottom: 40%; /* Réduit de 80% à 40% */
+    margin: 0.5rem auto;
+    
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    .gauge-value {
+      white-space: nowrap;
+      text-align: center;
+      
+      .display-6 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-right: 0.25rem;
+      }
+      
+      .fs-5 {
+        font-size: 0.875rem !important;
+        opacity: 0.8;
+      }
+    }
+  }
+
+  /* Badges */
+  .badge {
+    font-size: 0.9rem;
+    padding: 0.4em 0.6em;
+    border-radius: $border-radius;
+    font-weight: 500;
+    white-space: nowrap;
+    
+    &.bg-primary { background-color: rgba($primary, 0.1) !important; color: $primary !important; }
+    &.bg-info { background-color: rgba($info, 0.1) !important; color: $info !important; }
+    &.bg-warning { background-color: rgba($warning, 0.1) !important; color: $warning !important; }
+    &.bg-danger { background-color: rgba($danger, 0.1) !important; color: $danger !important; }
+    &.bg-secondary { background-color: rgba($secondary, 0.1) !important; color: $secondary !important; }
+  }
+
+  /* Icônes */
+  .bi {
+    margin-right: 0.25rem;
+    font-size: 1em;
+    vertical-align: -0.125em;
+  }
+
+  /* Boutons */
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Graphique */
+  .flex-grow-1 {
+    position: relative;
+    min-height: 0;
+  }
+
+  #historyChart {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 1200px) {
+    .gauge-wrapper {
+      padding-bottom: 60%;
+      
+      .gauge-value .display-6 {
+        font-size: 1.5rem;
+      }
+    }
+    
+    .card h5 {
+      font-size: 0.9rem;
+    }
+    
+    p {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container-fluid {
+      padding: 0.25rem;
+    }
+    
+    .gauge-wrapper {
+      padding-bottom: 70%;
+    }
+  }
+
+  /* Thème sombre */
+  &[data-bs-theme="dark"] {
+    .gauge-value {
+      color: #fff;
+    }
+    
+    .card {
+      background-color: rgba($dark, 0.4);
+    }
+  }
+
+  /* Amélioration des cartes de données */
+  .data-card {
+    .card-body {
+      padding: 1rem;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      border-radius: $border-radius;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: rgba($light, 0.05);
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .data-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba($light, 0.8);
+        
+        .bi {
+          font-size: 1.1em;
+        }
+      }
+
+      .data-value {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        
+        .badge {
+          font-size: 0.9rem;
+          padding: 0.4em 0.8em;
+        }
+
+        .unit {
+          font-size: 0.8rem;
+          opacity: 0.7;
+          margin-left: 0.25rem;
+        }
+      }
+    }
+  }
+
+  /* Amélioration des contrôles du graphique */
+  .chart-controls {
+    background-color: rgba($dark, 0.3);
+    padding: 0.75rem;
+    border-radius: $border-radius;
+    margin-bottom: 1rem;
+
+    .metric-selector {
+      display: flex;
+      gap: 0.5rem;
+      
+      .btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-width: 2px;
+        font-weight: 500;
+        
+        &.active {
+          box-shadow: 0 0 0 2px rgba($primary, 0.5);
+        }
+
+        .bi {
+          font-size: 1.1em;
+        }
+
+        &[data-metric="battery"] {
+          &.active { 
+            background-color: rgba($success, 0.2);
+            border-color: $success;
+            color: $success;
+          }
+        }
+        
+        &[data-metric="speed"] {
+          &.active {
+            background-color: rgba($info, 0.2);
+            border-color: $info;
+            color: $info;
+          }
+        }
+        
+        &[data-metric="power"] {
+          &.active {
+            background-color: rgba($warning, 0.2);
+            border-color: $warning;
+            color: $warning;
+          }
+        }
+      }
+    }
+  }
+
+  /* Mode clair */
+  &[data-bs-theme="light"] {
+    .card {
+      background-color: rgba($light, 0.9);
+      border-color: rgba($dark, 0.1);
+
+      h5 {
+        color: rgba($dark, 0.9);
+      }
+
+      .card-title-separator {
+        background: linear-gradient(to right, rgba($dark, 0.2), rgba($dark, 0.05));
+      }
+    }
+
+    .data-card {
+      .data-row {
+        &:hover {
+          background-color: rgba($dark, 0.03);
+        }
+
+        .data-label {
+          color: rgba($dark, 0.7);
+        }
+      }
+    }
+  }
 }
 
 

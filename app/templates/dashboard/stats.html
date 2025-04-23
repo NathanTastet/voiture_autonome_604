@@ -1,32 +1,161 @@
 {% extends "layout.html" %}
 {% block page_title %}Statistiques{% endblock %}
 
+{% set no_footer = True %}
+
 {% block content %}
-<div class="container-fluid py-3">
-  <div class="row g-3">
-    <div class="col-12 col-xl-4">
-      <div class="card h-100 text-center p-3">
-        <h4>Batterie</h4>
-        <div class="gauge-wrapper"><canvas id="batteryGauge"></canvas></div>
-        <p>Niveau : <span id="battery-level" class="fw-bold">--</span>%</p>
+<div class="dashboard">
+  <div class="container-fluid vh-100 p-2">
+    <div class="row h-100 g-2">
+      <!-- Colonne gauche : Jauges -->
+      <div class="col-4 d-flex flex-column g-2">
+        <!-- Jauge batterie -->
+        <div class="card flex-grow-1 mb-2">
+          <div class="card-body p-2 text-center">
+            <h5><i class="bi bi-battery-charging"></i> Batterie</h5>
+            <div class="card-title-separator"></div>
+            <div class="gauge-wrapper">
+              <canvas id="batteryGauge"></canvas>
+              <div class="position-absolute top-50 start-50 translate-middle">
+                <div class="gauge-value">
+                  <span id="battery-level" class="display-6 fw-bold">--</span>
+                  <span class="fs-5">%</span>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-6">
+                <p class="mb-0"><i class="bi bi-lightning-charge"></i> <span id="battery-voltage" class="fw-bold">--</span> V</p>
+              </div>
+              <div class="col-6">
+                <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="battery-temp" class="fw-bold">--</span> °C</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Jauge moteur -->
+        <div class="card flex-grow-1">
+          <div class="card-body p-2 text-center">
+            <h5><i class="bi bi-speedometer2"></i> Puissance Moteur</h5>
+            <div class="card-title-separator"></div>
+            <div class="gauge-wrapper">
+              <canvas id="motorGauge"></canvas>
+              <div class="position-absolute top-50 start-50 translate-middle">
+                <div class="gauge-value">
+                  <span id="motor-power" class="display-6 fw-bold">--</span>
+                  <span class="fs-5">W</span>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-6">
+                <p class="mb-0"><i class="bi bi-arrow-repeat"></i> <span id="motor-speed" class="fw-bold">--</span> tr/min</p>
+              </div>
+              <div class="col-6">
+                <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="motor-temp" class="fw-bold">--</span> °C</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne droite : Graphiques et données -->
+      <div class="col-8 d-flex flex-column h-100">
+        <!-- Graphiques -->
+        <div class="card flex-grow-1 mb-2">
+          <div class="card-body p-2 d-flex flex-column">
+            <div class="chart-controls">
+              <h5><i class="bi bi-graph-up"></i> Historique des mesures</h5>
+              <div class="card-title-separator"></div>
+              <div class="metric-selector">
+                <button class="btn btn-outline-primary active" data-metric="battery">
+                  <i class="bi bi-battery-charging"></i>
+                  <span>Batterie</span>
+                </button>
+                <button class="btn btn-outline-primary" data-metric="speed">
+                  <i class="bi bi-speedometer2"></i>
+                  <span>Vitesse</span>
+                </button>
+                <button class="btn btn-outline-primary" data-metric="power">
+                  <i class="bi bi-lightning-charge"></i>
+                  <span>Puissance</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex-grow-1">
+              <canvas id="historyChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Données -->
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="card data-card">
+              <div class="card-body">
+                <h5><i class="bi bi-radar"></i> Télémétrie</h5>
+                <div class="card-title-separator"></div>
+                <div class="data-row">
+                  <div class="data-label">
+                    <i class="bi bi-rulers"></i>
+                    <span>Distance LiDAR</span>
+                  </div>
+                  <div class="data-value">
+                    <span id="telemetry" class="badge bg-primary">--</span>
+                    <span class="unit">cm</span>
+                  </div>
+                </div>
+                <div class="data-row">
+                  <div class="data-label">
+                    <i class="bi bi-signpost"></i>
+                    <span>Distance parcourue</span>
+                  </div>
+                  <div class="data-value">
+                    <span id="distance" class="badge bg-info">--</span>
+                    <span class="unit">m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card data-card">
+              <div class="card-body">
+                <h5><i class="bi bi-lightning-charge"></i> Consommation</h5>
+                <div class="card-title-separator"></div>
+                <div class="data-row">
+                  <div class="data-label">
+                    <i class="bi bi-battery"></i>
+                    <span>Énergie consommée</span>
+                  </div>
+                  <div class="data-value">
+                    <span id="energy-consumption" class="badge bg-warning text-dark">--</span>
+                    <span class="unit">Wh</span>
+                  </div>
+                </div>
+                <div class="data-row">
+                  <div class="data-label">
+                    <i class="bi bi-lightning"></i>
+                    <span>Intensité</span>
+                  </div>
+                  <div class="data-value">
+                    <span id="current" class="badge bg-danger">--</span>
+                    <span class="unit">A</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="col-12 col-xl-8">
-      <div class="card h-100 p-3">
-        <h4>Historique Batterie</h4>
-        <canvas id="batteryHistory" class="dash-canvas"></canvas>
-      </div>
-    </div>
-  </div>
-  <div class="row g-3 mt-3">
-    <div class="col-lg-4"><div class="card p-3"><h5>Puissance moteur</h5><span id="motor-power">--</span> W</div></div>
-    <div class="col-lg-4"><div class="card p-3"><h5>Conso énergétique</h5><span id="energy-consumption">--</span> Wh</div></div>
-    <div class="col-lg-4"><div class="card p-3"><h5>Télémétrie</h5>LiDAR : <span id="telemetry">--</span> cm<br>Encodeurs : <span id="encoder">--</span> tr/min</div></div>
   </div>
 </div>
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
 <script src="{{ url_for('static', filename='build/dash-stats.bundle.js') }}"></script>
 {% endblock %}
