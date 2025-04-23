@@ -38,10 +38,10 @@ def home():
             session.pop("dashboard_connected", None)
             session.pop("dashboard_next", None)
 
-            # Redirection sécurisée vers la route interne, ou vers /dashboard/connect
+            # Redirection sécurisée
             if next_page and next_page.startswith("/dashboard"):
                 return redirect(next_page)
-            return redirect(url_for("dashboard.connect"))
+            return redirect(url_for("public.home"))  # Redirection vers la page d'accueil par défaut
         else:
             flash_errors(form)
 
