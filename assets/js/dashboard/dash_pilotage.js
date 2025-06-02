@@ -82,7 +82,7 @@ function setupGamepad() {
     gamepadIndex = e.gamepad.index;
     const statusElement = document.getElementById("gamepad-status");
     if (statusElement) {
-      statusElement.textContent = "Manette connectée";
+      statusElement.textContent = "Manette : " + e.gamepad.id;
       statusElement.className = "text-success";
     }
   });
@@ -158,18 +158,19 @@ function sendControlCommand(controls) {
       vehicle.setBrake(0, i);
       vehicle.applyEngineForce(0, i);
     }
-    // Accélération (roues arrière, puissance adaptée)
+    // Accélération (4 roues motrices, puissance fun)
     if (controls.throttle > 0) {
-      vehicle.applyEngineForce(-controls.throttle * 300, 2); // arrière droit
-      vehicle.applyEngineForce(-controls.throttle * 300, 3); // arrière gauche
+      for (let i = 0; i < 4; i++) {
+        vehicle.applyEngineForce(-controls.throttle * 35, i);
+      }
     }
     // Frein (toutes roues, progressif)
     if (controls.brake > 0) {
       for (let i = 0; i < 4; i++) vehicle.setBrake(controls.brake * 12, i);
     }
-    // Direction (roues avant, réaliste)
-    vehicle.setSteeringValue(controls.steering * 0.28, 0); // avant droit
-    vehicle.setSteeringValue(controls.steering * 0.28, 1); // avant gauche
+    // Direction (roues avant, plus réactif)
+    vehicle.setSteeringValue(controls.steering * 0.32, 0); // avant droit
+    vehicle.setSteeringValue(controls.steering * 0.32, 1); // avant gauche
   }
   // N'envoie la requête au backend QUE si on n'est PAS en simulation
   const modeSelector = document.getElementById("mode-selector");
@@ -218,6 +219,8 @@ function updateControlDisplay(throttle, brake, steering) {
   }
   if (throttleValue) throttleValue.textContent = `${Math.round(throttle * 100)}%`;
   if (brakeValue) brakeValue.textContent = `${Math.round(brake * 100)}%`;
+  // Feedback volant visuel (HTML/CSS)
+  updateSteeringVisual(steering);
 }
 
 // --- SIMULATION 3D (Three.js) ---
@@ -444,14 +447,14 @@ async function setupPhysics() {
   const groundMaterial = new CANNON.Material('ground');
   const carMaterial = new CANNON.Material('car');
   const contact = new CANNON.ContactMaterial(groundMaterial, carMaterial, {
-    friction: 0.8, // friction très élevée
+    friction: 1.0, // friction maximale
     restitution: 0.1
   });
   world.addContactMaterial(contact);
 
   // Châssis (box)
   carBody = new CANNON.Body({
-    mass: 2.5,
+    mass: 4,
     shape: new CANNON.Box(new CANNON.Vec3(1, 0.3, 2)),
     position: new CANNON.Vec3(0, 1.2, 0), // centre de masse abaissé
     angularDamping: 0.7,
@@ -471,11 +474,11 @@ async function setupPhysics() {
   const wheelOptions = {
     radius: 0.4,
     directionLocal: new CANNON.Vec3(0, -1, 0),
-    suspensionStiffness: 60,
+    suspensionStiffness: 90,
     suspensionRestLength: 0.25,
-    frictionSlip: 8, // friction accrue
-    dampingRelaxation: 4,
-    dampingCompression: 6,
+    frictionSlip: 14, // fun mais stable
+    dampingRelaxation: 7,
+    dampingCompression: 8,
     maxSuspensionForce: 100000,
     rollInfluence: 0.01,
     axleLocal: new CANNON.Vec3(-1, 0, 0),
@@ -502,7 +505,7 @@ async function setupPhysics() {
   wheelBodies = [];
   for (let i = 0; i < vehicle.wheelInfos.length; i++) {
     const wheel = vehicle.wheelInfos[i];
-    const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, 0.2, 16);
+    const cylinderShape = new CANNON.Cylinder(wheel.radius, wheel.radius, 0.5, 16);
     const wheelBody = new CANNON.Body({ mass: 0 });
     wheelBody.type = CANNON.Body.KINEMATIC;
     wheelBody.collisionFilterGroup = 0;
@@ -565,17 +568,11 @@ async function setupPhysics() {
 function addWheelsToCar() {
   // Roues visuelles (4 cylindres), placées dans la scène (pas enfants du châssis)
   if (!simuScene) return;
-  const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.2, 16);
+  const wheelGeom = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 16);
   wheelGeom.rotateZ(Math.PI / 2); // Correction orientation : axe Z
   const wheelMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
-  const positions = [
-    [ 0.9, -0.6,  1.7], // avant droit
-    [-0.9, -0.6,  1.7], // avant gauche
-    [ 0.9, -0.6, -1.7], // arrière droit
-    [-0.9, -0.6, -1.7], // arrière gauche
-  ];
   wheelMeshes = [];
-  for (let i = 0; i < positions.length; i++) {
+  for (let i = 0; i < 4; i++) {
     const mesh = new THREE.Mesh(wheelGeom, wheelMat);
     simuScene.add(mesh);
     wheelMeshes.push(mesh);
@@ -586,6 +583,11 @@ function animatePhysics() {
   if (!simuAnimating) return;
   if (!world) return;
   world.step(1/60);
+
+  // Limiteur de vitesse (fun mais raisonnable)
+  if (carBody.velocity.length() > 15) {
+    carBody.velocity.scale(15 / carBody.velocity.length(), carBody.velocity);
+  }
 
   // Synchroniser la voiture
   carMesh.position.copy(carBody.position);
