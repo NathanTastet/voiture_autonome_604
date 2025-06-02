@@ -9,51 +9,50 @@
     <div class="row h-100 g-2">
       <!-- Colonne gauche : Jauges -->
       <div class="col-4 d-flex flex-column g-2">
-        <!-- Jauge batterie -->
-        <div class="card flex-grow-1 mb-2">
-          <div class="card-body p-2 text-center">
-            <h5><i class="bi bi-battery-charging"></i> Batterie</h5>
-            <div class="card-title-separator"></div>
-            <div class="gauge-wrapper">
-              <canvas id="batteryGauge"></canvas>
-              <div class="position-absolute top-50 start-50 translate-middle">
-                <div class="gauge-value">
-                  <span id="battery-level" class="display-6 fw-bold">--</span>
-                  <span class="fs-5">%</span>
+        <div class="gauges-col">
+          <div class="card flex-grow-1 mb-2">
+            <div class="card-body p-2 text-center">
+              <h5><i class="bi bi-battery-charging"></i> Batterie</h5>
+              <div class="card-title-separator"></div>
+              <div class="gauge-wrapper">
+                <canvas id="batteryGauge"></canvas>
+                <div class="position-absolute top-50 start-50 translate-middle">
+                  <div class="gauge-value">
+                    <span id="battery-level" class="display-6 fw-bold">--</span>
+                    <span class="gauge-unit">%</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="row mt-2">
-              <div class="col-6">
-                <p class="mb-0"><i class="bi bi-lightning-charge"></i> <span id="battery-voltage" class="fw-bold">--</span> V</p>
-              </div>
-              <div class="col-6">
-                <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="battery-temp" class="fw-bold">--</span> °C</p>
+              <div class="row mt-2">
+                <div class="col-6">
+                  <p class="mb-0"><i class="bi bi-lightning-charge"></i> <span id="battery-voltage" class="fw-bold">--</span> V</p>
+                </div>
+                <div class="col-6">
+                  <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="battery-temp" class="fw-bold">--</span> °C</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Jauge moteur -->
-        <div class="card flex-grow-1">
-          <div class="card-body p-2 text-center">
-            <h5><i class="bi bi-speedometer2"></i> Puissance Moteur</h5>
-            <div class="card-title-separator"></div>
-            <div class="gauge-wrapper">
-              <canvas id="motorGauge"></canvas>
-              <div class="position-absolute top-50 start-50 translate-middle">
-                <div class="gauge-value">
-                  <span id="motor-power" class="display-6 fw-bold">--</span>
-                  <span class="fs-5">W</span>
+          <div class="card flex-grow-1">
+            <div class="card-body p-2 text-center">
+              <h5><i class="bi bi-speedometer2"></i> Puissance Moteur</h5>
+              <div class="card-title-separator"></div>
+              <div class="gauge-wrapper">
+                <canvas id="motorGauge"></canvas>
+                <div class="position-absolute top-50 start-50 translate-middle">
+                  <div class="gauge-value">
+                    <span id="motor-power" class="display-6 fw-bold">--</span>
+                    <span class="gauge-unit">W</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="row mt-2">
-              <div class="col-6">
-                <p class="mb-0"><i class="bi bi-arrow-repeat"></i> <span id="motor-speed" class="fw-bold">--</span> tr/min</p>
-              </div>
-              <div class="col-6">
-                <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="motor-temp" class="fw-bold">--</span> °C</p>
+              <div class="row mt-2">
+                <div class="col-6">
+                  <p class="mb-0"><i class="bi bi-arrow-repeat"></i> <span id="motor-speed" class="fw-bold">--</span> tr/min</p>
+                </div>
+                <div class="col-6">
+                  <p class="mb-0"><i class="bi bi-thermometer-half"></i> <span id="motor-temp" class="fw-bold">--</span> °C</p>
+                </div>
               </div>
             </div>
           </div>
