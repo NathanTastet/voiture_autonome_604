@@ -192,4 +192,22 @@ def disconnect():
     session.pop("dashboard_connected", None)
     session.pop("dashboard_mode", None)
     current_user.log_connection("dashboard", "déconnexion")
-    return jsonify({"status": "ok"}) 
+    return jsonify({"status": "ok"})
+
+@dashboard_bp.route("/vehicle/camera/stream")
+@login_required
+@permission_required("pilotage")
+def camera_stream():
+    """Endpoint pour le flux vidéo de la caméra"""
+    try:
+        # TODO: Implémenter la connexion à la caméra réelle
+        # Pour l'instant, on renvoie une image statique
+        return send_file(
+            "static/build/camera-placeholder.jpg",
+            mimetype="image/jpeg"
+        )
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Erreur de connexion à la caméra: {str(e)}"
+        }), 500 

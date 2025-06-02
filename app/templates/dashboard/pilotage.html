@@ -2,30 +2,101 @@
 {% block page_title %}Pilotage{% endblock %}
 
 {% block content %}
-<div class="container py-3">
-  <div class="card mb-3 p-3">
-    <h4>Pilotage</h4>
-    <button id="start-stop-btn" class="btn btn-primary mb-3">
-      <i class="bi bi-play-fill"></i> Démarrer/Arrêter
-    </button>
-    <label for="mode-selector">Mode :</label>
-    <select id="mode-selector" class="form-select mb-3">
-      <option value="manuel">Manuel</option>
-      <option value="auto">Automatique</option>
-      <option value="simu" selected>Simulation</option>
-    </select>
-    <button id="reset-sensors-btn" class="btn btn-warning w-100">
-      <i class="bi bi-arrow-counterclockwise"></i> Reset capteurs
-    </button>
-  </div>
-  <div class="card p-3">
-    <h4>Journal d’activité</h4>
-    <div id="activity-log" style="max-height:260px;overflow:auto;"></div>
+<div class="container-fluid py-3">
+  <div class="row g-3">
+    <!-- Colonne de gauche : Contrôles -->
+    <div class="col-12 col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Contrôles</h4>
+            <span id="connection-status" class="badge bg-secondary">
+              <i class="bi bi-circle-fill me-1"></i>Déconnecté
+            </span>
+          </div>
+
+          <!-- Mode de pilotage -->
+          <div class="mb-3">
+            <label for="mode-selector" class="form-label">Mode :</label>
+            <select id="mode-selector" class="form-select">
+              <option value="manuel">Manuel</option>
+              <option value="simu" selected>Simulation</option>
+            </select>
+          </div>
+          <button id="start-stop-btn" class="btn btn-primary w-100 mb-3">
+            <i class="bi bi-play-fill"></i> Démarrer
+          </button>
+
+          <!-- Feedback des contrôles -->
+          <div id="manual-controls">
+            <div class="mb-3">
+              <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-controller me-2"></i>
+                <span id="gamepad-status" class="text-danger">Aucune manette</span>
+              </div>
+              <div id="keyboard-controls">
+                <div class="alert alert-info p-2 mb-2">
+                  <kbd>Z/W</kbd> : Accélérer &nbsp; <kbd>S</kbd> : Frein &nbsp; <kbd>Q/A</kbd> : Gauche &nbsp; <kbd>D</kbd> : Droite
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Accélérateur</label>
+              <div class="progress mb-1">
+                <div id="throttle-gauge" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+              </div>
+              <span id="throttle-value" class="small">0%</span>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Frein</label>
+              <div class="progress mb-1">
+                <div id="brake-gauge" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+              </div>
+              <span id="brake-value" class="small">0%</span>
+            </div>
+            <div class="mb-3 text-center">
+              <label class="form-label">Direction</label>
+              <div id="steering-visual" style="display:inline-block;">
+                <span id="steering-value" class="h4">0°</span>
+                <div id="steering-wheel" style="width:40px;height:40px;display:inline-block;margin-left:10px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-journal-text me-2"></i>Journal d'activité
+          </h5>
+          <div id="activity-log" class="small" style="max-height:200px;overflow:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne de droite : Simulation 3D ou flux vidéo -->
+    <div class="col-12 col-lg-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">
+            <i class="bi bi-camera-video me-2"></i><span id="simu-or-video-title">Simulation 3D</span>
+          </h5>
+          <div class="ratio ratio-16x9">
+            <canvas id="simu-canvas" style="width:100%;height:100%;background:#222;border-radius:8px;"></canvas>
+            <img id="cameraStream"
+                 src="https://via.placeholder.com/800x600?text=Caméra"
+                 class="img-fluid rounded d-none"
+                 alt="Flux vidéo">
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
 <script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
 <script src="{{ url_for('static', filename='build/dash-pilotage.bundle.js') }}"></script>
 {% endblock %}
