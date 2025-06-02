@@ -116,13 +116,21 @@ document.addEventListener('DOMContentLoaded', function() {
         tab.addEventListener('shown.bs.tab', (e) => {
             currentTab = e.target.id.split('-')[0];
             currentPage = 1;
+            // Affiche le bon formulaire de filtres
+            document.getElementById('filtersFormCourses').style.display = (currentTab === 'courses') ? '' : 'none';
+            document.getElementById('filtersFormConnexions').style.display = (currentTab === 'connexions') ? '' : 'none';
             loadData();
         });
     });
 
     // Gestionnaire d'événements pour les filtres
     document.getElementById('applyFilters').addEventListener('click', () => {
-        const form = document.getElementById('filtersForm');
+        let form;
+        if (currentTab === 'courses') {
+            form = document.getElementById('filtersFormCourses');
+        } else {
+            form = document.getElementById('filtersFormConnexions');
+        }
         filters = {};
         new FormData(form).forEach((value, key) => {
             if (value) filters[key] = value;

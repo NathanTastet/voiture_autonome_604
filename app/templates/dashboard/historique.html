@@ -24,19 +24,20 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="filtersForm">
+                    <!-- Formulaire filtres courses -->
+                    <form id="filtersFormCourses">
                         <div class="mb-3">
-                            <label for="search" class="form-label"><i class="bi bi-search"></i> Recherche</label>
-                            <input type="text" class="form-control" id="search" name="q" placeholder="Rechercher...">
+                            <label for="search-courses" class="form-label"><i class="bi bi-search"></i> Recherche</label>
+                            <input type="text" class="form-control" id="search-courses" name="q" placeholder="Rechercher...">
                         </div>
                         <div class="row mb-3">
                             <div class="col">
-                                <label for="date_debut" class="form-label"><i class="bi bi-calendar"></i> Date de début</label>
-                                <input type="date" class="form-control" id="date_debut" name="date_debut">
+                                <label for="date_debut-courses" class="form-label"><i class="bi bi-calendar"></i> Date de début</label>
+                                <input type="date" class="form-control" id="date_debut-courses" name="date_debut">
                             </div>
                             <div class="col">
-                                <label for="date_fin" class="form-label"><i class="bi bi-calendar"></i> Date de fin</label>
-                                <input type="date" class="form-control" id="date_fin" name="date_fin">
+                                <label for="date_fin-courses" class="form-label"><i class="bi bi-calendar"></i> Date de fin</label>
+                                <input type="date" class="form-control" id="date_fin-courses" name="date_fin">
                             </div>
                         </div>
                         <div class="mb-3">
@@ -54,6 +55,31 @@
                                 <option value="">Tous</option>
                                 <option value="termine">Terminé</option>
                                 <option value="en_cours">En cours</option>
+                            </select>
+                        </div>
+                    </form>
+                    <!-- Formulaire filtres connexions -->
+                    <form id="filtersFormConnexions" style="display:none;">
+                        <div class="mb-3">
+                            <label for="search-connexions" class="form-label"><i class="bi bi-search"></i> Utilisateur</label>
+                            <input type="text" class="form-control" id="search-connexions" name="q" placeholder="Rechercher un utilisateur...">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="date_debut-connexions" class="form-label"><i class="bi bi-calendar"></i> Date de début</label>
+                                <input type="date" class="form-control" id="date_debut-connexions" name="date_debut">
+                            </div>
+                            <div class="col">
+                                <label for="date_fin-connexions" class="form-label"><i class="bi bi-calendar"></i> Date de fin</label>
+                                <input type="date" class="form-control" id="date_fin-connexions" name="date_fin">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="type_connexion" class="form-label"><i class="bi bi-arrow-left-right"></i> Type de connexion</label>
+                            <select class="form-select" id="type_connexion" name="type_connexion">
+                                <option value="">Tous</option>
+                                <option value="connexion">Connexion</option>
+                                <option value="déconnexion">Déconnexion</option>
                             </select>
                         </div>
                     </form>
