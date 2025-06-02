@@ -3,6 +3,7 @@
 from app.common.views import *
 # Import des modèles spécifiques
 from app.dashboard.models import ConnectionLog, RaceLog
+import pytz
 
 historique_bp = Blueprint("historique", __name__, url_prefix="/dashboard/historique")
 
@@ -110,7 +111,7 @@ def api_connexions():
     type_connexion = request.args.get('type_connexion')
     
     # Construction de la requête de base
-    query = ConnectionLog.query
+    query = ConnectionLog.query.filter(ConnectionLog.fonction == "site")
     
     # Application des filtres
     if q:
@@ -141,12 +142,12 @@ def api_connexions():
     # Formatage des résultats
     connexions = []
     for connexion in pagination.items:
+        paris = pytz.timezone("Europe/Paris")
+        local_dt = connexion.connection_date.replace(tzinfo=pytz.utc).astimezone(paris)
         connexions.append({
-            'id': connexion.id,
             'user_name': connexion.user_name,
-            'fonction': connexion.fonction,
             'type': connexion.type,
-            'connection_date': connexion.connection_date.isoformat()
+            'connection_date': local_dt.strftime('%Y-%m-%dT%H:%M:%S')
         })
     
     return jsonify({

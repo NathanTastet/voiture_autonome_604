@@ -32,6 +32,7 @@ def home():
     if request.method == "POST":
         if form.validate_on_submit():
             login_user(form.user)
+            form.user.log_connection("site", "connexion")
             flash("Connexion réussie.", "success")
 
             # On vide les anciens indicateurs du dashboard
@@ -53,6 +54,7 @@ def home():
 @login_required
 def logout():
     """Déconnexion."""
+    current_user.log_connection("site", "déconnexion")
     logout_user()
     flash("Déconnexion effectuée.", "info")
 

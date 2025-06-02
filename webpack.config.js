@@ -25,7 +25,7 @@ module.exports = {
     "dash-maps":  "./assets/js/dashboard/dash_maps.js",
     "dash-pilotage":  "./assets/js/dashboard/dash_pilotage.js",
     "dash-stats":  "./assets/js/dashboard/dash_stats.js",
-    "dashboard_history": "./assets/js/dashboard/dash_history.js",
+    "dash-history": "./assets/js/dashboard/dash_history.js",
     main_css: [
       path.join(__dirname, 'assets', 'scss', 'custom-bootstrap.scss'), // custom bootstrap en dernier
     ],

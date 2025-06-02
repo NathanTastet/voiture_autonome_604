@@ -120,10 +120,9 @@
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>Utilisateur</th>
-                            <th>Fonction</th>
-                            <th>Type</th>
                             <th>Date</th>
+                            <th>Utilisateur</th>
+                            <th>Type</th>
                         </tr>
                     </thead>
                     <tbody id="connexionsTableBody">
@@ -142,5 +141,5 @@
 {% endblock %}
 
 {% block js %}
-<script src="{{ url_for('static', filename='build/dash_history.bundle.js') }}"></script>
+<script src="{{ url_for('static', filename='build/dash-history.bundle.js') }}"></script>
 {% endblock %} 

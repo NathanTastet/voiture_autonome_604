@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour charger les données
     function loadData() {
         const url = currentTab === 'courses' 
-            ? '/api/dashboard/historique/courses' 
-            : '/api/dashboard/historique/connexions';
+            ? '/dashboard/historique/api/courses' 
+            : '/dashboard/historique/api/connexions';
         
         const params = new URLSearchParams({
             page: currentPage,
@@ -46,10 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             } else {
                 row.innerHTML = `
+                    <td><i class="bi bi-calendar"></i> ${new Date(item.connection_date).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}</td>
                     <td><i class="bi bi-person"></i> ${item.user_name}</td>
-                    <td><i class="bi bi-gear"></i> ${item.fonction}</td>
-                    <td><i class="bi bi-${item.type === 'connexion' ? 'box-arrow-in-right' : 'box-arrow-right'}"></i> ${item.type}</td>
-                    <td><i class="bi bi-calendar"></i> ${new Date(item.connection_date).toLocaleString()}</td>
+                    <td>
+                        <i class="bi bi-${item.type === 'connexion' ? 'box-arrow-in-right' : 'box-arrow-right'}"></i>
+                        <span class="${item.type === 'connexion' ? 'text-success fw-bold' : 'text-danger fw-bold'}">
+                            ${item.type}
+                        </span>
+                    </td>
                 `;
             }
             tbody.appendChild(row);
@@ -62,13 +66,13 @@ document.addEventListener('DOMContentLoaded', function() {
         pagination.innerHTML = '';
 
         const totalPages = data.pages;
-        const currentPage = data.current_page;
+        let pageCourante = data.current_page;
 
         // Bouton précédent
         const prevLi = document.createElement('li');
-        prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+        prevLi.className = `page-item ${pageCourante === 1 ? 'disabled' : ''}`;
         prevLi.innerHTML = `
-            <a class="page-link" href="#" data-page="${currentPage - 1}">
+            <a class="page-link" href="#" data-page="${pageCourante - 1}">
                 <i class="bi bi-chevron-left"></i> Précédent
             </a>
         `;
@@ -77,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pages
         for (let i = 1; i <= totalPages; i++) {
             const li = document.createElement('li');
-            li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+            li.className = `page-item ${i === pageCourante ? 'active' : ''}`;
             li.innerHTML = `
                 <a class="page-link" href="#" data-page="${i}">${i}</a>
             `;
@@ -86,9 +90,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Bouton suivant
         const nextLi = document.createElement('li');
-        nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+        nextLi.className = `page-item ${pageCourante === totalPages ? 'disabled' : ''}`;
         nextLi.innerHTML = `
-            <a class="page-link" href="#" data-page="${currentPage + 1}">
+            <a class="page-link" href="#" data-page="${pageCourante + 1}">
                 Suivant <i class="bi bi-chevron-right"></i>
             </a>
         `;
