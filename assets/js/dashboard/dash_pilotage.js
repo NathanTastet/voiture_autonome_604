@@ -13,7 +13,7 @@ let simulationInterval = null;
 let isRunning = false;
 
 // --- SIMULATION 3D (Three.js) ---
-let simuScene, simuCamera, simuRenderer, carMesh, steeringWheelMesh;
+let simuScene, simuCamera, simuRenderer, carMesh;
 let simuAnimating = false;
 let currentSteering = 0;
 let currentThrottle = 0;
@@ -218,8 +218,6 @@ function updateControlDisplay(throttle, brake, steering) {
   }
   if (throttleValue) throttleValue.textContent = `${Math.round(throttle * 100)}%`;
   if (brakeValue) brakeValue.textContent = `${Math.round(brake * 100)}%`;
-  // Feedback volant visuel
-  updateSteeringVisual(steering);
 }
 
 // --- SIMULATION 3D (Three.js) ---
@@ -374,14 +372,6 @@ function initSimu3D() {
   simuScene.add(carBody);
   carMesh = carBody;
 
-  // Volant (cercle)
-  const steeringGeom = new THREE.TorusGeometry(0.4, 0.08, 16, 100);
-  const steeringMat = new THREE.MeshPhongMaterial({ color: 0x222222 });
-  steeringWheelMesh = new THREE.Mesh(steeringGeom, steeringMat);
-  steeringWheelMesh.position.set(0, 1.3, 1.2);
-  steeringWheelMesh.rotation.z = Math.PI / 2;
-  simuScene.add(steeringWheelMesh);
-
   // Animation
   simuAnimating = true;
   animateSimu3D();
@@ -401,8 +391,6 @@ function initSimu3D() {
 
 function animateSimu3D() {
   if (!simuAnimating) return;
-  // Animation du volant
-  steeringWheelMesh.rotation.z = -currentSteering * 1.2;
   // Animation de la voiture (avance/recul)
   let dz = (currentThrottle - currentBrake) * 0.2;
   let dx = Math.sin(-currentSteering * 0.5) * dz;
@@ -587,9 +575,8 @@ function addWheelsToCar() {
     [-0.9, -0.6, -1.7], // arrière gauche
   ];
   wheelMeshes = [];
-  for (const pos of positions) {
+  for (let i = 0; i < positions.length; i++) {
     const mesh = new THREE.Mesh(wheelGeom, wheelMat);
-    mesh.position.set(...pos);
     simuScene.add(mesh);
     wheelMeshes.push(mesh);
   }
