@@ -64,14 +64,6 @@
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">
-            <i class="bi bi-journal-text me-2"></i>Journal d'activité
-          </h5>
-          <div id="activity-log" class="small" style="max-height:200px;overflow:auto;"></div>
-        </div>
-      </div>
     </div>
 
     <!-- Colonne de droite : Simulation 3D ou flux vidéo -->
@@ -96,7 +88,6 @@
 {% endblock %}
 
 {% block js %}
-<script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
 <script src="{{ url_for('static', filename='build/dash-common.bundle.js') }}"></script>
 <script src="{{ url_for('static', filename='build/dash-pilotage.bundle.js') }}"></script>
 {% endblock %}
