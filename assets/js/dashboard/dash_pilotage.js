@@ -290,7 +290,15 @@ function addPlaygroundPhysics(world) {
   world.addBody(wallW);
 }
 
-function addPinsAndBlocks(scene, world) {
+function addPinsAndBlocks(scene, world, carMaterial) {
+  // Matériaux pour les objets
+  const objectMaterial = new CANNON.Material('object');
+  const contactMaterial = new CANNON.ContactMaterial(carMaterial, objectMaterial, {
+    friction: 0.3,
+    restitution: 0.7
+  });
+  world.addContactMaterial(contactMaterial);
+
   // Générer des quilles (cylindres fins) et des blocs (cubes) à renverser
   const pins = [];
   for (let i = 0; i < 10; i++) {
@@ -304,7 +312,12 @@ function addPinsAndBlocks(scene, world) {
     pinMesh.position.set(x, 1, z);
     scene.add(pinMesh);
     // Physique
-    const pinBody = new CANNON.Body({ mass: 0.5 });
+    const pinBody = new CANNON.Body({ 
+      mass: 0.5,
+      material: objectMaterial,
+      linearDamping: 0.4,
+      angularDamping: 0.4
+    });
     pinBody.addShape(new CANNON.Cylinder(0.3, 0.3, 2, 16));
     pinBody.position.set(x, 1, z);
     world.addBody(pinBody);
@@ -320,7 +333,12 @@ function addPinsAndBlocks(scene, world) {
     );
     blockMesh.position.set(x, 0.5, z);
     scene.add(blockMesh);
-    const blockBody = new CANNON.Body({ mass: 1 });
+    const blockBody = new CANNON.Body({ 
+      mass: 1,
+      material: objectMaterial,
+      linearDamping: 0.4,
+      angularDamping: 0.4
+    });
     blockBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)));
     blockBody.position.set(x, 0.5, z);
     world.addBody(blockBody);
@@ -388,7 +406,7 @@ function initSimu3D() {
   }
   // Ajout des quilles/blocs
   if (typeof addPinsAndBlocks === 'function' && typeof simuScene !== 'undefined' && typeof world !== 'undefined') {
-    addPinsAndBlocks(simuScene, world);
+    addPinsAndBlocks(simuScene, world, carMaterial);
   }
 }
 
@@ -459,7 +477,9 @@ async function setupPhysics() {
     position: new CANNON.Vec3(0, 1.2, 0), // centre de masse abaissé
     angularDamping: 0.7,
     linearDamping: 0.3,
-    material: carMaterial
+    material: carMaterial,
+    collisionFilterGroup: 1,
+    collisionFilterMask: -1
   });
   world.addBody(carBody);
 
@@ -485,7 +505,9 @@ async function setupPhysics() {
     chassisConnectionPointLocal: undefined, // à définir pour chaque roue
     maxSuspensionTravel: 0.3,
     customSlidingRotationalSpeed: -30,
-    useCustomSlidingRotationalSpeed: true
+    useCustomSlidingRotationalSpeed: true,
+    collisionFilterGroup: 1,
+    collisionFilterMask: -1
   };
   // Avant droit
   wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.6,  1.7);
@@ -553,7 +575,7 @@ async function setupPhysics() {
   addPlaygroundPhysics(world);
 
   // Générer des quilles (cylindres fins) et des blocs (cubes) à renverser
-  addPinsAndBlocks(simuScene, world);
+  addPinsAndBlocks(simuScene, world, carMaterial);
 
   // Ajout du mesh "toit" pour le look voiture
   if (carMesh) {
