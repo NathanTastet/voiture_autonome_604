@@ -10,9 +10,14 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Contrôles</h4>
-            <span id="connection-status" class="badge bg-secondary">
-              <i class="bi bi-circle-fill me-1"></i>Déconnecté
-            </span>
+            <div class="d-flex align-items-center gap-2">
+              <span id="connection-status" class="badge bg-secondary">
+                <i class="bi bi-circle-fill me-1"></i>Déconnecté
+              </span>
+              <button class="btn btn-sm btn-info" data-bs-toggle="collapse" data-bs-target="#controlsDetails">
+                <i class="bi bi-question-circle"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Mode de pilotage -->
@@ -36,14 +41,47 @@
               </div>
               <div id="keyboard-controls">
                 <div class="alert alert-info p-2 mb-2">
-                  <kbd>Z/W</kbd> : Accélérer &nbsp; <kbd>S</kbd> : Frein &nbsp; <kbd>Q/A</kbd> : Gauche &nbsp; <kbd>D</kbd> : Droite
+                  <kbd>Z/W</kbd> : Accélérer &nbsp; <kbd>S</kbd> : Reculer &nbsp; <kbd>Q/A</kbd> : Gauche &nbsp; <kbd>D</kbd> : Droite &nbsp; <kbd>Espace</kbd> : Frein
                 </div>
               </div>
             </div>
+
+            <!-- Bulle informative des contrôles -->
+            <div id="controlsDetails" class="collapse mb-3">
+              <div class="card">
+                <div class="card-body bg-dark text-light">
+                  <h6 class="card-title">Contrôles détaillés :</h6>
+                  <div class="row">
+                    <div class="col-6">
+                      <h6 class="text-info">Clavier :</h6>
+                      <ul class="list-unstyled">
+                        <li><kbd>Z/W</kbd> : Avancer</li>
+                        <li><kbd>S</kbd> : Reculer</li>
+                        <li><kbd>Q/A</kbd> : Gauche</li>
+                        <li><kbd>D</kbd> : Droite</li>
+                        <li><kbd>Espace</kbd> : Frein</li>
+                        <li><kbd>R</kbd> : Reset position</li>
+                      </ul>
+                    </div>
+                    <div class="col-6">
+                      <h6 class="text-info">Manette :</h6>
+                      <ul class="list-unstyled">
+                        <li><kbd>R2</kbd> : Avancer</li>
+                        <li><kbd>L2</kbd> : Reculer</li>
+                        <li><kbd>Joystick</kbd> : Direction</li>
+                        <li><kbd>X</kbd> : Frein</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="mb-3">
               <label class="form-label">Accélérateur</label>
-              <div class="progress mb-1">
+              <div class="progress mb-1" style="height: 20px;">
                 <div id="throttle-gauge" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                <div id="throttle-gauge-negative" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
               </div>
               <span id="throttle-value" class="small">0%</span>
             </div>

@@ -28,6 +28,54 @@ let vehicle, wheelBodies = [];
 // Traînée visuelle
 let trailPoints = [], trailLine = null;
 
+// --- GÉNÉRATION DU TERRAIN VALLONNÉ DOUX PARTAGÉ ---
+const TERRAIN_SIZE = 500;
+const TERRAIN_SEGMENTS = 50;
+let terrainHeights = null;
+
+function generateTerrainHeights() {
+  // Terrain vallonné doux, adapté à la conduite
+  const heights = [];
+  for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
+    heights[i] = [];
+    for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
+      const x = (i / TERRAIN_SEGMENTS) * TERRAIN_SIZE;
+      const z = (j / TERRAIN_SEGMENTS) * TERRAIN_SIZE;
+      // Relief doux, pas trop chaotique
+      let y =
+        1.5 * Math.sin(x * 0.015 + 10) * Math.cos(z * 0.013 + 5) +
+        1.0 * Math.sin(x * 0.04 + z * 0.025) +
+        0.7 * Math.cos(z * 0.05 - x * 0.02);
+      // Un peu de bruit doux
+      const noise =
+        0.4 * (Math.sin(x * 0.07 + z * 0.09) + Math.cos(x * 0.06 - z * 0.08));
+      y += noise;
+      // Clamp pour éviter les extrêmes
+      y = Math.max(-2.5, Math.min(2.5, y));
+      heights[i][j] = y;
+    }
+  }
+  return heights;
+}
+
+function getTerrainHeightAt(x, z) {
+  // x, z en coordonnées monde, terrain centré en (0,0)
+  // Retourne la hauteur du terrain à ce point (interpolation bilinéaire)
+  const fx = ((x + TERRAIN_SIZE/2) / TERRAIN_SIZE) * TERRAIN_SEGMENTS;
+  const fz = ((z + TERRAIN_SIZE/2) / TERRAIN_SIZE) * TERRAIN_SEGMENTS;
+  const i = Math.floor(fx);
+  const j = Math.floor(fz);
+  if (!terrainHeights || i < 0 || j < 0 || i >= TERRAIN_SEGMENTS || j >= TERRAIN_SEGMENTS) return 0;
+  const h00 = terrainHeights[i][j];
+  const h10 = terrainHeights[i+1][j];
+  const h01 = terrainHeights[i][j+1];
+  const h11 = terrainHeights[i+1][j+1];
+  const dx = fx - i;
+  const dz = fz - j;
+  // Interpolation bilinéaire
+  return h00 * (1-dx) * (1-dz) + h10 * dx * (1-dz) + h01 * (1-dx) * dz + h11 * dx * dz;
+}
+
 // Configuration de la caméra
 function setupCamera() {
   const cameraElement = document.getElementById("cameraStream");
@@ -105,17 +153,34 @@ function readInputs() {
   let throttle = 0, brake = 0, steering = 0;
   // Clavier
   if (keysPressed.has("z") || keysPressed.has("w")) throttle = 1;
-  if (keysPressed.has("s")) brake = 1;
-  if (keysPressed.has("q") || keysPressed.has("a")) steering = -1;
-  if (keysPressed.has("d")) steering = 1;
+  if (keysPressed.has("s")) throttle = -1; // Recul au lieu de frein
+  if (keysPressed.has(" ")) brake = 1; // Frein avec espace
+  if (keysPressed.has("q") || keysPressed.has("a")) steering = 1; // Inversé
+  if (keysPressed.has("d")) steering = -1; // Inversé
   // Manette (prioritaire si appuyée)
   if (gamepadIndex !== null) {
     const gamepad = navigator.getGamepads()[gamepadIndex];
     if (gamepad) {
-      // Si une entrée manette est active, elle prend le dessus
-      if (gamepad.buttons[7].value > 0.05) throttle = gamepad.buttons[7].value;
-      if (gamepad.buttons[6].value > 0.05) brake = gamepad.buttons[6].value;
-      if (Math.abs(gamepad.axes[0]) > 0.1) steering = gamepad.axes[0];
+      // R2 (bouton 7) pour avancer
+      if (gamepad.buttons[7].value > 0.05) {
+        throttle = gamepad.buttons[7].value;
+      }
+      // L2 (bouton 6) pour reculer
+      if (gamepad.buttons[6].value > 0.05) {
+        throttle = -gamepad.buttons[6].value;
+      }
+      // X (bouton 0) pour freiner
+      if (gamepad.buttons[0].value > 0.05) {
+        brake = gamepad.buttons[0].value;
+      }
+      // Joystick pour la direction
+      if (Math.abs(gamepad.axes[0]) > 0.1) {
+        steering = -gamepad.axes[0]; // Inversé
+      }
+      // Y/Triangle (bouton 3) pour reset
+      if (gamepad.buttons[3].pressed) {
+        resetCar();
+      }
     }
   }
   sendControlCommand({ throttle, brake, steering });
@@ -158,19 +223,33 @@ function sendControlCommand(controls) {
       vehicle.setBrake(0, i);
       vehicle.applyEngineForce(0, i);
     }
-    // Accélération (4 roues motrices, puissance fun)
+    // Accélération (4 roues motrices, puissance sportive)
     if (controls.throttle > 0) {
-      for (let i = 0; i < 4; i++) {
-        vehicle.applyEngineForce(-controls.throttle * 35, i);
-      }
+      // Distribution progressive de la puissance
+      const frontForce = controls.throttle * 40; // Réduit pour l'avant
+      const rearForce = controls.throttle * 60;  // Plus de puissance à l'arrière
+      vehicle.applyEngineForce(-frontForce, 0); // Avant droit
+      vehicle.applyEngineForce(-frontForce, 1); // Avant gauche
+      vehicle.applyEngineForce(-rearForce, 2);  // Arrière droit
+      vehicle.applyEngineForce(-rearForce, 3);  // Arrière gauche
+    }
+    // Recul (4 roues motrices, puissance sportive)
+    if (controls.throttle < 0) {
+      // Distribution progressive de la puissance
+      const frontForce = controls.throttle * 30; // Réduit pour l'avant
+      const rearForce = controls.throttle * 40;  // Plus de puissance à l'arrière
+      vehicle.applyEngineForce(-frontForce, 0); // Avant droit
+      vehicle.applyEngineForce(-frontForce, 1); // Avant gauche
+      vehicle.applyEngineForce(-rearForce, 2);  // Arrière droit
+      vehicle.applyEngineForce(-rearForce, 3);  // Arrière gauche
     }
     // Frein (toutes roues, progressif)
     if (controls.brake > 0) {
       for (let i = 0; i < 4; i++) vehicle.setBrake(controls.brake * 12, i);
     }
     // Direction (roues avant, plus réactif)
-    vehicle.setSteeringValue(controls.steering * 0.32, 0); // avant droit
-    vehicle.setSteeringValue(controls.steering * 0.32, 1); // avant gauche
+    vehicle.setSteeringValue(controls.steering * 0.5, 0);
+    vehicle.setSteeringValue(controls.steering * 0.5, 1);
   }
   // N'envoie la requête au backend QUE si on n'est PAS en simulation
   const modeSelector = document.getElementById("mode-selector");
@@ -206,11 +285,24 @@ function updateControlDisplay(throttle, brake, steering) {
   currentSteering = steering;
   // Jauges
   const throttleGauge = document.getElementById("throttle-gauge");
+  const throttleGaugeNegative = document.getElementById("throttle-gauge-negative");
   const brakeGauge = document.getElementById("brake-gauge");
   const steeringValue = document.getElementById("steering-value");
   const throttleValue = document.getElementById("throttle-value");
   const brakeValue = document.getElementById("brake-value");
-  if (throttleGauge) throttleGauge.style.width = `${throttle * 100}%`;
+
+  // Gestion de l'accélérateur (positif et négatif)
+  if (throttle > 0) {
+    if (throttleGauge) throttleGauge.style.width = `${throttle * 100}%`;
+    if (throttleGaugeNegative) throttleGaugeNegative.style.width = '0%';
+  } else if (throttle < 0) {
+    if (throttleGauge) throttleGauge.style.width = '0%';
+    if (throttleGaugeNegative) throttleGaugeNegative.style.width = `${Math.abs(throttle) * 100}%`;
+  } else {
+    if (throttleGauge) throttleGauge.style.width = '0%';
+    if (throttleGaugeNegative) throttleGaugeNegative.style.width = '0%';
+  }
+
   if (brakeGauge) brakeGauge.style.width = `${brake * 100}%`;
   const steeringDegrees = Math.round(steering * 90);
   if (steeringValue) {
@@ -221,130 +313,207 @@ function updateControlDisplay(throttle, brake, steering) {
   if (brakeValue) brakeValue.textContent = `${Math.round(brake * 100)}%`;
   // Feedback volant visuel (HTML/CSS)
   updateSteeringVisual(steering);
+
+  // Mise à jour des feux de stop
+  if (carMesh && carMesh.brakeLights) {
+    const brakeIntensity = brake > 0 ? 1 : 0.3;
+    carMesh.brakeLights.forEach(light => {
+      light.material.color.setRGB(brakeIntensity, 0, 0);
+    });
+  }
+  
+  // Mise à jour des particules d'échappement
+  if (carMesh && carMesh.exhaustParticles && carMesh.particlePositions) {
+    const positions = carMesh.particlePositions;
+    const exhaustPos = new THREE.Vector3(0.5, 0.1, -2.2);
+    
+    for (let i = 0; i < positions.length; i += 3) {
+      // Réinitialiser les particules qui sortent de la zone
+      if (positions[i + 1] > 1) {
+        positions[i] = exhaustPos.x + (Math.random() - 0.5) * 0.1;
+        positions[i + 1] = exhaustPos.y;
+        positions[i + 2] = exhaustPos.z;
+      } else {
+        // Faire monter les particules
+        positions[i + 1] += 0.02;
+        // Ajouter un peu de mouvement aléatoire
+        positions[i] += (Math.random() - 0.5) * 0.01;
+        positions[i + 2] += (Math.random() - 0.5) * 0.01;
+      }
+    }
+    
+    carMesh.exhaustParticles.geometry.attributes.position.needsUpdate = true;
+  }
 }
 
 // --- SIMULATION 3D (Three.js) ---
 function createPlayground(scene) {
-  // Grand sol plat
-  const size = 500;
-  const groundGeo = new THREE.PlaneGeometry(size, size, 1, 1);
-  const groundMat = new THREE.MeshPhongMaterial({ color: 0x444444 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;
+  if (!terrainHeights) terrainHeights = generateTerrainHeights();
+  // Mesh Three.js
+  const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
+  geometry.rotateX(-Math.PI / 2); // Met le sol à plat dans le plan XZ
+  const vertices = geometry.attributes.position.array;
+  let k = 0;
+  let minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
+    for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
+      vertices[k + 2] = (j / TERRAIN_SEGMENTS - 0.5) * TERRAIN_SIZE; // z
+      vertices[k] = (i / TERRAIN_SEGMENTS - 0.5) * TERRAIN_SIZE; // x
+      vertices[k + 1] = terrainHeights[i][j]; // y
+      if (terrainHeights[i][j] < minY) minY = terrainHeights[i][j];
+      if (terrainHeights[i][j] > maxY) maxY = terrainHeights[i][j];
+      k += 3;
+    }
+  }
+  geometry.computeVertexNormals();
+  // Dégradé de gris accentué selon la hauteur
+  const colors = [];
+  for (let i = 0; i < geometry.attributes.position.count; i++) {
+    const y = geometry.attributes.position.getY(i);
+    const t = (y - minY) / (maxY - minY);
+    const c = 0.35 + 0.6 * t; // gris foncé à gris très clair
+    colors.push(c, c, c);
+  }
+  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  // Matériau Phong avec brillance
+  const material = new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide, specular: 0xaaaaaa, shininess: 40 });
+  const ground = new THREE.Mesh(geometry, material);
+  ground.position.set(0, 0, 0); // Centré à l'origine
   ground.receiveShadow = true;
   scene.add(ground);
   groundMesh = ground;
-
-  // Murs (4 côtés)
+  // Murs visuels parfaitement alignés
   const wallHeight = 4, wallThickness = 1;
   const wallMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
-  const wallGeo = new THREE.BoxGeometry(size, wallHeight, wallThickness);
-  const wallGeoV = new THREE.BoxGeometry(wallThickness, wallHeight, size);
+  const wallGeo = new THREE.BoxGeometry(TERRAIN_SIZE, wallHeight, wallThickness);
+  const wallGeoV = new THREE.BoxGeometry(wallThickness, wallHeight, TERRAIN_SIZE);
   // Nord
   let wallN = new THREE.Mesh(wallGeo, wallMat);
-  wallN.position.set(0, wallHeight/2, size/2);
+  wallN.position.set(0, wallHeight/2, TERRAIN_SIZE/2);
   scene.add(wallN);
   // Sud
   let wallS = new THREE.Mesh(wallGeo, wallMat);
-  wallS.position.set(0, wallHeight/2, -size/2);
+  wallS.position.set(0, wallHeight/2, -TERRAIN_SIZE/2);
   scene.add(wallS);
   // Est
   let wallE = new THREE.Mesh(wallGeoV, wallMat);
-  wallE.position.set(size/2, wallHeight/2, 0);
+  wallE.position.set(TERRAIN_SIZE/2, wallHeight/2, 0);
   scene.add(wallE);
   // Ouest
   let wallW = new THREE.Mesh(wallGeoV, wallMat);
-  wallW.position.set(-size/2, wallHeight/2, 0);
+  wallW.position.set(-TERRAIN_SIZE/2, wallHeight/2, 0);
   scene.add(wallW);
 }
 
 function addPlaygroundPhysics(world) {
-  const size = 500;
+  if (!terrainHeights) terrainHeights = generateTerrainHeights();
+  // Transposer le tableau pour le Heightfield Cannon-es (Cannon attend [z][x])
+  const heightsTransposed = [];
+  for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
+    heightsTransposed[j] = [];
+    for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
+      heightsTransposed[j][i] = terrainHeights[i][j];
+    }
+  }
   // Sol physique
+  const elementSize = TERRAIN_SIZE / TERRAIN_SEGMENTS;
+  const groundShape = new CANNON.Heightfield(heightsTransposed, { elementSize });
   groundBody = new CANNON.Body({ mass: 0 });
-  groundBody.addShape(new CANNON.Plane());
-  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+  groundBody.addShape(groundShape);
+  groundBody.position.set(0, 0, 0); // Centré à l'origine
   world.addBody(groundBody);
-  // Murs physiques
+  // Murs physiques parfaitement alignés
   const wallHeight = 4, wallThickness = 1;
   // Nord
   let wallN = new CANNON.Body({ mass: 0 });
-  wallN.addShape(new CANNON.Box(new CANNON.Vec3(size/2, wallHeight/2, wallThickness/2)));
-  wallN.position.set(0, wallHeight/2, size/2);
+  wallN.addShape(new CANNON.Box(new CANNON.Vec3(TERRAIN_SIZE/2, wallHeight/2, wallThickness/2)));
+  wallN.position.set(0, wallHeight/2, TERRAIN_SIZE/2);
   world.addBody(wallN);
   // Sud
   let wallS = new CANNON.Body({ mass: 0 });
-  wallS.addShape(new CANNON.Box(new CANNON.Vec3(size/2, wallHeight/2, wallThickness/2)));
-  wallS.position.set(0, wallHeight/2, -size/2);
+  wallS.addShape(new CANNON.Box(new CANNON.Vec3(TERRAIN_SIZE/2, wallHeight/2, wallThickness/2)));
+  wallS.position.set(0, wallHeight/2, -TERRAIN_SIZE/2);
   world.addBody(wallS);
   // Est
   let wallE = new CANNON.Body({ mass: 0 });
-  wallE.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, size/2)));
-  wallE.position.set(size/2, wallHeight/2, 0);
+  wallE.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, TERRAIN_SIZE/2)));
+  wallE.position.set(TERRAIN_SIZE/2, wallHeight/2, 0);
   world.addBody(wallE);
   // Ouest
   let wallW = new CANNON.Body({ mass: 0 });
-  wallW.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, size/2)));
-  wallW.position.set(-size/2, wallHeight/2, 0);
+  wallW.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, TERRAIN_SIZE/2)));
+  wallW.position.set(-TERRAIN_SIZE/2, wallHeight/2, 0);
   world.addBody(wallW);
 }
 
 function addPinsAndBlocks(scene, world, carMaterial) {
-  // Matériaux pour les objets
   const objectMaterial = new CANNON.Material('object');
   const contactMaterial = new CANNON.ContactMaterial(carMaterial, objectMaterial, {
-    friction: 0.3,
-    restitution: 0.7
+    friction: 0.2,
+    restitution: 0.8
   });
   world.addContactMaterial(contactMaterial);
-
-  // Générer des quilles (cylindres fins) et des blocs (cubes) à renverser
+  // Zones sûres pour placer les objets (surfaces planes)
+  const safeZones = [
+    { x: -40, z: -40, size: 10 },
+    { x: 40, z: -40, size: 10 },
+    { x: -40, z: 40, size: 10 },
+    { x: 40, z: 40, size: 10 }
+  ];
   const pins = [];
-  for (let i = 0; i < 10; i++) {
-    const x = Math.random() * 60 - 30;
-    const z = Math.random() * 60 - 30;
-    // Visuel
+  for (let i = 0; i < 15; i++) {
+    const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
+    const x = zone.x + (Math.random() - 0.5) * zone.size;
+    const z = zone.z + (Math.random() - 0.5) * zone.size;
+    const y = getTerrainHeightAt(x, z) + 1.05; // quille hauteur 2 -> 1 + 0.05
     const pinMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3, 0.3, 2, 16),
       new THREE.MeshPhongMaterial({ color: 0xffffff })
     );
-    pinMesh.position.set(x, 1, z);
+    pinMesh.position.set(x, y, z);
+    pinMesh.castShadow = true;
+    pinMesh.receiveShadow = true;
     scene.add(pinMesh);
-    // Physique
     const pinBody = new CANNON.Body({ 
-      mass: 0.5,
+      mass: 0.1,
       material: objectMaterial,
-      linearDamping: 0.4,
-      angularDamping: 0.4
+      linearDamping: 0.2,
+      angularDamping: 0.2,
+      collisionFilterGroup: 2,
+      collisionFilterMask: -1
     });
     pinBody.addShape(new CANNON.Cylinder(0.3, 0.3, 2, 16));
-    pinBody.position.set(x, 1, z);
+    pinBody.position.set(x, y, z);
     world.addBody(pinBody);
     pins.push({ mesh: pinMesh, body: pinBody });
   }
-  // Blocs
-  for (let i = 0; i < 8; i++) {
-    const x = Math.random() * 60 - 30;
-    const z = Math.random() * 60 - 30;
+  for (let i = 0; i < 12; i++) {
+    const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
+    const x = zone.x + (Math.random() - 0.5) * zone.size;
+    const z = zone.z + (Math.random() - 0.5) * zone.size;
+    const y = getTerrainHeightAt(x, z) + 0.55; // bloc hauteur 1 -> 0.5 + 0.05
     const blockMesh = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshPhongMaterial({ color: 0xff4444 })
     );
-    blockMesh.position.set(x, 0.5, z);
+    blockMesh.position.set(x, y, z);
+    blockMesh.castShadow = true;
+    blockMesh.receiveShadow = true;
     scene.add(blockMesh);
     const blockBody = new CANNON.Body({ 
-      mass: 1,
+      mass: 0.3,
       material: objectMaterial,
-      linearDamping: 0.4,
-      angularDamping: 0.4
+      linearDamping: 0.2,
+      angularDamping: 0.2,
+      collisionFilterGroup: 2,
+      collisionFilterMask: -1
     });
     blockBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)));
-    blockBody.position.set(x, 0.5, z);
+    blockBody.position.set(x, y, z);
     world.addBody(blockBody);
     pins.push({ mesh: blockMesh, body: blockBody });
   }
-  // Synchronisation dans animatePhysics
+  obstacles = pins;
   return pins;
 }
 
@@ -408,6 +577,9 @@ function initSimu3D() {
   if (typeof addPinsAndBlocks === 'function' && typeof simuScene !== 'undefined' && typeof world !== 'undefined') {
     addPinsAndBlocks(simuScene, world, carMaterial);
   }
+
+  // Ajouter les éléments visuels à la voiture
+  addCarVisuals();
 }
 
 function animateSimu3D() {
@@ -461,65 +633,72 @@ function updateSteeringVisual(steering) {
 async function setupPhysics() {
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
 
-  // Matériaux avec friction élevée
+  // Matériaux avec friction optimisée pour les pentes
   const groundMaterial = new CANNON.Material('ground');
   const carMaterial = new CANNON.Material('car');
   const contact = new CANNON.ContactMaterial(groundMaterial, carMaterial, {
-    friction: 1.0, // friction maximale
+    friction: 0.6, // Augmenté pour mieux tenir sur les pentes
     restitution: 0.1
   });
   world.addContactMaterial(contact);
 
-  // Châssis (box)
+  // Châssis avec centre de masse plus bas pour la stabilité
   carBody = new CANNON.Body({
-    mass: 4,
-    shape: new CANNON.Box(new CANNON.Vec3(1, 0.3, 2)),
-    position: new CANNON.Vec3(0, 1.2, 0), // centre de masse abaissé
-    angularDamping: 0.7,
-    linearDamping: 0.3,
+    mass: 3,
+    position: new CANNON.Vec3(0, 0.8, 0),
+    angularDamping: 0.8,
+    linearDamping: 0.1,
     material: carMaterial,
     collisionFilterGroup: 1,
-    collisionFilterMask: -1
+    collisionFilterMask: -1,
+    fixedRotation: false,
+    allowSleep: false
   });
+  // Ajout de la forme avec un offset pour abaisser le centre de masse
+  carBody.addShape(
+    new CANNON.Box(new CANNON.Vec3(1, 0.3, 2)),
+    new CANNON.Vec3(0, -0.2, 0)
+  );
   world.addBody(carBody);
 
-  // RaycastVehicle
+  // RaycastVehicle avec paramètres optimisés pour les pentes
   vehicle = new CANNON.RaycastVehicle({
     chassisBody: carBody,
-    indexRightAxis: 0, // x
-    indexUpAxis: 1,    // y
-    indexForwardAxis: 2 // z
+    indexRightAxis: 0,
+    indexUpAxis: 1,
+    indexForwardAxis: 2
   });
-  // Ajout des 4 roues (y = -0.6)
+
   const wheelOptions = {
     radius: 0.4,
     directionLocal: new CANNON.Vec3(0, -1, 0),
-    suspensionStiffness: 90,
-    suspensionRestLength: 0.25,
-    frictionSlip: 14, // fun mais stable
-    dampingRelaxation: 7,
-    dampingCompression: 8,
+    suspensionStiffness: 45,
+    suspensionRestLength: 0.3,
+    frictionSlip: 1.5, // Augmenté pour mieux tenir sur les pentes
+    dampingRelaxation: 4.5,
+    dampingCompression: 3.5,
     maxSuspensionForce: 100000,
     rollInfluence: 0.01,
     axleLocal: new CANNON.Vec3(-1, 0, 0),
-    chassisConnectionPointLocal: undefined, // à définir pour chaque roue
+    chassisConnectionPointLocal: undefined,
     maxSuspensionTravel: 0.3,
     customSlidingRotationalSpeed: -30,
     useCustomSlidingRotationalSpeed: true,
     collisionFilterGroup: 1,
     collisionFilterMask: -1
   };
+
   // Avant droit
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.6,  1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.4,  1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Avant gauche
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.6,  1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.4,  1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Arrière droit
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.6, -1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.4, -1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Arrière gauche
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.6, -1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.4, -1.7);
   vehicle.addWheel({ ...wheelOptions });
   vehicle.addToWorld(world);
 
@@ -607,8 +786,8 @@ function animatePhysics() {
   world.step(1/60);
 
   // Limiteur de vitesse (fun mais raisonnable)
-  if (carBody.velocity.length() > 15) {
-    carBody.velocity.scale(15 / carBody.velocity.length(), carBody.velocity);
+  if (carBody.velocity.length() > 20) {
+    carBody.velocity.scale(20 / carBody.velocity.length(), carBody.velocity);
   }
 
   // Synchroniser la voiture
@@ -622,6 +801,16 @@ function animatePhysics() {
       const t = vehicle.wheelInfos[i].worldTransform;
       wheelMeshes[i].position.copy(t.position);
       wheelMeshes[i].quaternion.copy(t.quaternion);
+    }
+  }
+
+  // Synchroniser les obstacles
+  if (obstacles) {
+    for (const obstacle of obstacles) {
+      if (obstacle.mesh && obstacle.body) {
+        obstacle.mesh.position.copy(obstacle.body.position);
+        obstacle.mesh.quaternion.copy(obstacle.body.quaternion);
+      }
     }
   }
 
@@ -649,6 +838,94 @@ function animatePhysics() {
   simuRenderer.render(simuScene, simuCamera);
   requestAnimationFrame(animatePhysics);
 }
+
+// Ajout des éléments visuels à la voiture
+function addCarVisuals() {
+  if (!carMesh) return;
+  
+  // Phares avant
+  const headlightGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.05);
+  const headlightMaterial = new THREE.MeshPhongMaterial({ color: 0xffffcc });
+  
+  const leftHeadlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
+  leftHeadlight.position.set(-0.8, 0.2, 2.1);
+  carMesh.add(leftHeadlight);
+  
+  const rightHeadlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
+  rightHeadlight.position.set(0.8, 0.2, 2.1);
+  carMesh.add(rightHeadlight);
+  
+  // Feux de stop
+  const brakeLightGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.05);
+  const brakeLightMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+  
+  const leftBrakeLight = new THREE.Mesh(brakeLightGeometry, brakeLightMaterial);
+  leftBrakeLight.position.set(-0.8, 0.2, -2.1);
+  carMesh.add(leftBrakeLight);
+  
+  const rightBrakeLight = new THREE.Mesh(brakeLightGeometry, brakeLightMaterial);
+  rightBrakeLight.position.set(0.8, 0.2, -2.1);
+  carMesh.add(rightBrakeLight);
+  
+  // Pot d'échappement
+  const exhaustGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8);
+  const exhaustMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+  const exhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
+  exhaust.rotation.x = Math.PI / 2;
+  exhaust.position.set(0.5, 0.1, -2.2);
+  carMesh.add(exhaust);
+  
+  // Système de particules pour l'échappement
+  const particleCount = 50;
+  const particleGeometry = new THREE.BufferGeometry();
+  const particlePositions = new Float32Array(particleCount * 3);
+  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+  
+  const particleMaterial = new THREE.PointsMaterial({
+    color: 0x666666,
+    size: 0.1,
+    transparent: true,
+    opacity: 0.6
+  });
+  
+  const particles = new THREE.Points(particleGeometry, particleMaterial);
+  carMesh.add(particles);
+  
+  // Stocker les références pour l'animation
+  carMesh.brakeLights = [leftBrakeLight, rightBrakeLight];
+  carMesh.exhaustParticles = particles;
+  carMesh.particlePositions = particlePositions;
+}
+
+// Fonction de reset de la voiture
+function resetCar() {
+  if (!carBody) {
+    console.warn("Tentative de reset avant l'initialisation de la voiture");
+    return;
+  }
+  try {
+    const x = 0, z = 0;
+    const y = getTerrainHeightAt(x, z) + 0.4; // châssis 0.6 -> 0.3 + 0.1
+    carBody.position.set(x, y, z);
+    carBody.velocity.set(0, 0, 0);
+    carBody.angularVelocity.set(0, 0, 0);
+    carBody.torque.set(0, 0, 0);
+    carBody.quaternion.set(0, 0, 0, 1);
+    if (carMesh) {
+      carMesh.position.set(x, y, z);
+      carMesh.quaternion.set(0, 0, 0, 1);
+    }
+  } catch (error) {
+    console.error("Erreur lors du reset de la voiture:", error);
+  }
+}
+
+// Gestion du reset avec la touche R
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'r' && isRunning) {
+    resetCar();
+  }
+});
 
 // Initialisation
 document.addEventListener("DOMContentLoaded", () => {
@@ -707,15 +984,4 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   requestAnimationFrame(readInputs);
-});
-
-// Ajout du reset voiture (touche R)
-window.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'r' && carBody) {
-    carBody.position.set(0, 2, 0);
-    carBody.velocity.set(0, 0, 0);
-    carBody.angularVelocity.set(0, 0, 0);
-    carBody.torque.set(0, 0, 0);
-    carBody.quaternion.set(0, 0, 0, 1);
-  }
 });
