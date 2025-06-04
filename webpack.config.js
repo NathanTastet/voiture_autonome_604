@@ -41,6 +41,9 @@ module.exports = {
     extensions: [".js", ".jsx", ".css"]
   },
   devtool: debug ? "eval-source-map" : false,
+  cache: {
+    type: 'filesystem', // Sauvegarde un cache entre les builds
+  },
   plugins: [
     new MiniCssExtractPlugin({ filename: "[name].bundle.css" }),
     new webpack.ProvidePlugin({ $: "jquery", jQuery: "jquery" }),

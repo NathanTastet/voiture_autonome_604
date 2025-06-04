@@ -28,53 +28,13 @@ let vehicle, wheelBodies = [];
 // Traînée visuelle
 let trailPoints = [], trailLine = null;
 
-// --- GÉNÉRATION DU TERRAIN VALLONNÉ DOUX PARTAGÉ ---
-const TERRAIN_SIZE = 500;
-const TERRAIN_SEGMENTS = 50;
-let terrainHeights = null;
-
-function generateTerrainHeights() {
-  // Terrain vallonné doux, adapté à la conduite
-  const heights = [];
-  for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
-    heights[i] = [];
-    for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
-      const x = (i / TERRAIN_SEGMENTS) * TERRAIN_SIZE;
-      const z = (j / TERRAIN_SEGMENTS) * TERRAIN_SIZE;
-      // Relief doux, pas trop chaotique
-      let y =
-        1.5 * Math.sin(x * 0.015 + 10) * Math.cos(z * 0.013 + 5) +
-        1.0 * Math.sin(x * 0.04 + z * 0.025) +
-        0.7 * Math.cos(z * 0.05 - x * 0.02);
-      // Un peu de bruit doux
-      const noise =
-        0.4 * (Math.sin(x * 0.07 + z * 0.09) + Math.cos(x * 0.06 - z * 0.08));
-      y += noise;
-      // Clamp pour éviter les extrêmes
-      y = Math.max(-2.5, Math.min(2.5, y));
-      heights[i][j] = y;
-    }
-  }
-  return heights;
-}
-
-function getTerrainHeightAt(x, z) {
-  // x, z en coordonnées monde, terrain centré en (0,0)
-  // Retourne la hauteur du terrain à ce point (interpolation bilinéaire)
-  const fx = ((x + TERRAIN_SIZE/2) / TERRAIN_SIZE) * TERRAIN_SEGMENTS;
-  const fz = ((z + TERRAIN_SIZE/2) / TERRAIN_SIZE) * TERRAIN_SEGMENTS;
-  const i = Math.floor(fx);
-  const j = Math.floor(fz);
-  if (!terrainHeights || i < 0 || j < 0 || i >= TERRAIN_SEGMENTS || j >= TERRAIN_SEGMENTS) return 0;
-  const h00 = terrainHeights[i][j];
-  const h10 = terrainHeights[i+1][j];
-  const h01 = terrainHeights[i][j+1];
-  const h11 = terrainHeights[i+1][j+1];
-  const dx = fx - i;
-  const dz = fz - j;
-  // Interpolation bilinéaire
-  return h00 * (1-dx) * (1-dz) + h10 * dx * (1-dz) + h01 * (1-dx) * dz + h11 * dx * dz;
-}
+// Variables globales pour la caméra
+let cameraOffset = new THREE.Vector3(0, 3, -8); // Position derrière la voiture (z négatif pour être derrière)
+let cameraLookOffset = new THREE.Vector3(0, 0, 5); // Regarder devant la voiture (z positif pour regarder devant)
+let cameraTilt = 0; // Inclinaison de la caméra
+let targetCameraTilt = 0; // Inclinaison cible pour l'animation fluide
+let baseFOV = 60; // FOV de base
+let currentFOV = baseFOV; // FOV actuel pour l'animation fluide
 
 // Configuration de la caméra
 function setupCamera() {
@@ -153,10 +113,10 @@ function readInputs() {
   let throttle = 0, brake = 0, steering = 0;
   // Clavier
   if (keysPressed.has("z") || keysPressed.has("w")) throttle = 1;
-  if (keysPressed.has("s")) throttle = -1; // Recul au lieu de frein
-  if (keysPressed.has(" ")) brake = 1; // Frein avec espace
-  if (keysPressed.has("q") || keysPressed.has("a")) steering = 1; // Inversé
-  if (keysPressed.has("d")) steering = -1; // Inversé
+  if (keysPressed.has("s")) throttle = -1;
+  if (keysPressed.has(" ")) brake = 1;
+  if (keysPressed.has("q") || keysPressed.has("a")) steering = 1;
+  if (keysPressed.has("d")) steering = -1;
   // Manette (prioritaire si appuyée)
   if (gamepadIndex !== null) {
     const gamepad = navigator.getGamepads()[gamepadIndex];
@@ -169,17 +129,19 @@ function readInputs() {
       if (gamepad.buttons[6].value > 0.05) {
         throttle = -gamepad.buttons[6].value;
       }
-      // X (bouton 0) pour freiner
-      if (gamepad.buttons[0].value > 0.05) {
-        brake = gamepad.buttons[0].value;
+      // Carré (bouton 1) pour freiner
+      if (gamepad.buttons[1].value > 0.05) {
+        brake = gamepad.buttons[1].value;
       }
-      // Joystick pour la direction
+      // Joystick gauche pour la direction
       if (Math.abs(gamepad.axes[0]) > 0.1) {
-        steering = -gamepad.axes[0]; // Inversé
+        steering = -gamepad.axes[0];
       }
-      // Y/Triangle (bouton 3) pour reset
-      if (gamepad.buttons[3].pressed) {
-        resetCar();
+      // Joystick droit pour l'inclinaison de la caméra
+      if (Math.abs(gamepad.axes[2]) > 0.1) {
+        targetCameraTilt = gamepad.axes[2] * 0.5; // Limite l'inclinaison à 0.5 radians
+      } else {
+        targetCameraTilt = 0; // Retour à l'inclinaison normale
       }
     }
   }
@@ -223,21 +185,21 @@ function sendControlCommand(controls) {
       vehicle.setBrake(0, i);
       vehicle.applyEngineForce(0, i);
     }
-    // Accélération (4 roues motrices, puissance sportive)
+    // Accélération (4 roues motrices, puissance équilibrée)
     if (controls.throttle > 0) {
       // Distribution progressive de la puissance
-      const frontForce = controls.throttle * 40; // Réduit pour l'avant
-      const rearForce = controls.throttle * 60;  // Plus de puissance à l'arrière
+      const frontForce = controls.throttle * 25;
+      const rearForce = controls.throttle * 35;
       vehicle.applyEngineForce(-frontForce, 0); // Avant droit
       vehicle.applyEngineForce(-frontForce, 1); // Avant gauche
       vehicle.applyEngineForce(-rearForce, 2);  // Arrière droit
       vehicle.applyEngineForce(-rearForce, 3);  // Arrière gauche
     }
-    // Recul (4 roues motrices, puissance sportive)
+    // Recul (4 roues motrices, puissance équilibrée)
     if (controls.throttle < 0) {
       // Distribution progressive de la puissance
-      const frontForce = controls.throttle * 30; // Réduit pour l'avant
-      const rearForce = controls.throttle * 40;  // Plus de puissance à l'arrière
+      const frontForce = controls.throttle * 20;
+      const rearForce = controls.throttle * 25;
       vehicle.applyEngineForce(-frontForce, 0); // Avant droit
       vehicle.applyEngineForce(-frontForce, 1); // Avant gauche
       vehicle.applyEngineForce(-rearForce, 2);  // Arrière droit
@@ -247,9 +209,9 @@ function sendControlCommand(controls) {
     if (controls.brake > 0) {
       for (let i = 0; i < 4; i++) vehicle.setBrake(controls.brake * 12, i);
     }
-    // Direction (roues avant, plus réactif)
-    vehicle.setSteeringValue(controls.steering * 0.5, 0);
-    vehicle.setSteeringValue(controls.steering * 0.5, 1);
+    // Direction (roues avant, sensibilité moyenne)
+    vehicle.setSteeringValue(controls.steering * 0.8, 0);
+    vehicle.setSteeringValue(controls.steering * 0.8, 1);
   }
   // N'envoie la requête au backend QUE si on n'est PAS en simulation
   const modeSelector = document.getElementById("mode-selector");
@@ -313,167 +275,103 @@ function updateControlDisplay(throttle, brake, steering) {
   if (brakeValue) brakeValue.textContent = `${Math.round(brake * 100)}%`;
   // Feedback volant visuel (HTML/CSS)
   updateSteeringVisual(steering);
-
-  // Mise à jour des feux de stop
-  if (carMesh && carMesh.brakeLights) {
-    const brakeIntensity = brake > 0 ? 1 : 0.3;
-    carMesh.brakeLights.forEach(light => {
-      light.material.color.setRGB(brakeIntensity, 0, 0);
-    });
-  }
-  
-  // Mise à jour des particules d'échappement
-  if (carMesh && carMesh.exhaustParticles && carMesh.particlePositions) {
-    const positions = carMesh.particlePositions;
-    const exhaustPos = new THREE.Vector3(0.5, 0.1, -2.2);
-    
-    for (let i = 0; i < positions.length; i += 3) {
-      // Réinitialiser les particules qui sortent de la zone
-      if (positions[i + 1] > 1) {
-        positions[i] = exhaustPos.x + (Math.random() - 0.5) * 0.1;
-        positions[i + 1] = exhaustPos.y;
-        positions[i + 2] = exhaustPos.z;
-      } else {
-        // Faire monter les particules
-        positions[i + 1] += 0.02;
-        // Ajouter un peu de mouvement aléatoire
-        positions[i] += (Math.random() - 0.5) * 0.01;
-        positions[i + 2] += (Math.random() - 0.5) * 0.01;
-      }
-    }
-    
-    carMesh.exhaustParticles.geometry.attributes.position.needsUpdate = true;
-  }
 }
 
 // --- SIMULATION 3D (Three.js) ---
 function createPlayground(scene) {
-  if (!terrainHeights) terrainHeights = generateTerrainHeights();
-  // Mesh Three.js
-  const geometry = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, TERRAIN_SEGMENTS, TERRAIN_SEGMENTS);
-  geometry.rotateX(-Math.PI / 2); // Met le sol à plat dans le plan XZ
-  const vertices = geometry.attributes.position.array;
-  let k = 0;
-  let minY = Infinity, maxY = -Infinity;
-  for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
-    for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
-      vertices[k + 2] = (j / TERRAIN_SEGMENTS - 0.5) * TERRAIN_SIZE; // z
-      vertices[k] = (i / TERRAIN_SEGMENTS - 0.5) * TERRAIN_SIZE; // x
-      vertices[k + 1] = terrainHeights[i][j]; // y
-      if (terrainHeights[i][j] < minY) minY = terrainHeights[i][j];
-      if (terrainHeights[i][j] > maxY) maxY = terrainHeights[i][j];
-      k += 3;
-    }
-  }
-  geometry.computeVertexNormals();
-  // Dégradé de gris accentué selon la hauteur
-  const colors = [];
-  for (let i = 0; i < geometry.attributes.position.count; i++) {
-    const y = geometry.attributes.position.getY(i);
-    const t = (y - minY) / (maxY - minY);
-    const c = 0.35 + 0.6 * t; // gris foncé à gris très clair
-    colors.push(c, c, c);
-  }
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  // Matériau Phong avec brillance
-  const material = new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide, specular: 0xaaaaaa, shininess: 40 });
-  const ground = new THREE.Mesh(geometry, material);
-  ground.position.set(0, 0, 0); // Centré à l'origine
+  // Grand sol plat
+  const size = 500;
+  const groundGeo = new THREE.PlaneGeometry(size, size, 1, 1);
+  const groundMat = new THREE.MeshPhongMaterial({ color: 0x444444 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
   ground.receiveShadow = true;
   scene.add(ground);
   groundMesh = ground;
-  // Murs visuels parfaitement alignés
+
+  // Murs (4 côtés)
   const wallHeight = 4, wallThickness = 1;
   const wallMat = new THREE.MeshPhongMaterial({ color: 0x888888 });
-  const wallGeo = new THREE.BoxGeometry(TERRAIN_SIZE, wallHeight, wallThickness);
-  const wallGeoV = new THREE.BoxGeometry(wallThickness, wallHeight, TERRAIN_SIZE);
+  const wallGeo = new THREE.BoxGeometry(size, wallHeight, wallThickness);
+  const wallGeoV = new THREE.BoxGeometry(wallThickness, wallHeight, size);
   // Nord
   let wallN = new THREE.Mesh(wallGeo, wallMat);
-  wallN.position.set(0, wallHeight/2, TERRAIN_SIZE/2);
+  wallN.position.set(0, wallHeight/2, size/2);
   scene.add(wallN);
   // Sud
   let wallS = new THREE.Mesh(wallGeo, wallMat);
-  wallS.position.set(0, wallHeight/2, -TERRAIN_SIZE/2);
+  wallS.position.set(0, wallHeight/2, -size/2);
   scene.add(wallS);
   // Est
   let wallE = new THREE.Mesh(wallGeoV, wallMat);
-  wallE.position.set(TERRAIN_SIZE/2, wallHeight/2, 0);
+  wallE.position.set(size/2, wallHeight/2, 0);
   scene.add(wallE);
   // Ouest
   let wallW = new THREE.Mesh(wallGeoV, wallMat);
-  wallW.position.set(-TERRAIN_SIZE/2, wallHeight/2, 0);
+  wallW.position.set(-size/2, wallHeight/2, 0);
   scene.add(wallW);
 }
 
 function addPlaygroundPhysics(world) {
-  if (!terrainHeights) terrainHeights = generateTerrainHeights();
-  // Transposer le tableau pour le Heightfield Cannon-es (Cannon attend [z][x])
-  const heightsTransposed = [];
-  for (let j = 0; j <= TERRAIN_SEGMENTS; j++) {
-    heightsTransposed[j] = [];
-    for (let i = 0; i <= TERRAIN_SEGMENTS; i++) {
-      heightsTransposed[j][i] = terrainHeights[i][j];
-    }
-  }
+  const size = 500;
   // Sol physique
-  const elementSize = TERRAIN_SIZE / TERRAIN_SEGMENTS;
-  const groundShape = new CANNON.Heightfield(heightsTransposed, { elementSize });
   groundBody = new CANNON.Body({ mass: 0 });
-  groundBody.addShape(groundShape);
-  groundBody.position.set(0, 0, 0); // Centré à l'origine
+  groundBody.addShape(new CANNON.Plane());
+  groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
   world.addBody(groundBody);
-  // Murs physiques parfaitement alignés
+  // Murs physiques
   const wallHeight = 4, wallThickness = 1;
   // Nord
   let wallN = new CANNON.Body({ mass: 0 });
-  wallN.addShape(new CANNON.Box(new CANNON.Vec3(TERRAIN_SIZE/2, wallHeight/2, wallThickness/2)));
-  wallN.position.set(0, wallHeight/2, TERRAIN_SIZE/2);
+  wallN.addShape(new CANNON.Box(new CANNON.Vec3(size/2, wallHeight/2, wallThickness/2)));
+  wallN.position.set(0, wallHeight/2, size/2);
   world.addBody(wallN);
   // Sud
   let wallS = new CANNON.Body({ mass: 0 });
-  wallS.addShape(new CANNON.Box(new CANNON.Vec3(TERRAIN_SIZE/2, wallHeight/2, wallThickness/2)));
-  wallS.position.set(0, wallHeight/2, -TERRAIN_SIZE/2);
+  wallS.addShape(new CANNON.Box(new CANNON.Vec3(size/2, wallHeight/2, wallThickness/2)));
+  wallS.position.set(0, wallHeight/2, -size/2);
   world.addBody(wallS);
   // Est
   let wallE = new CANNON.Body({ mass: 0 });
-  wallE.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, TERRAIN_SIZE/2)));
-  wallE.position.set(TERRAIN_SIZE/2, wallHeight/2, 0);
+  wallE.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, size/2)));
+  wallE.position.set(size/2, wallHeight/2, 0);
   world.addBody(wallE);
   // Ouest
   let wallW = new CANNON.Body({ mass: 0 });
-  wallW.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, TERRAIN_SIZE/2)));
-  wallW.position.set(-TERRAIN_SIZE/2, wallHeight/2, 0);
+  wallW.addShape(new CANNON.Box(new CANNON.Vec3(wallThickness/2, wallHeight/2, size/2)));
+  wallW.position.set(-size/2, wallHeight/2, 0);
   world.addBody(wallW);
 }
 
 function addPinsAndBlocks(scene, world, carMaterial) {
+  // Matériaux pour les objets
   const objectMaterial = new CANNON.Material('object');
-  const contactMaterial = new CANNON.ContactMaterial(carMaterial, objectMaterial, {
-    friction: 0.2,
-    restitution: 0.8
-  });
+  const contactMaterial = new CANNON.ContactMaterial(
+    carMaterial || new CANNON.Material('car'),
+    objectMaterial,
+    {
+      friction: 0.2,
+      restitution: 0.8
+    }
+  );
   world.addContactMaterial(contactMaterial);
-  // Zones sûres pour placer les objets (surfaces planes)
-  const safeZones = [
-    { x: -40, z: -40, size: 10 },
-    { x: 40, z: -40, size: 10 },
-    { x: -40, z: 40, size: 10 },
-    { x: 40, z: 40, size: 10 }
-  ];
+
+  // Générer des quilles (cylindres fins) et des blocs (cubes) à renverser
   const pins = [];
-  for (let i = 0; i < 15; i++) {
-    const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
-    const x = zone.x + (Math.random() - 0.5) * zone.size;
-    const z = zone.z + (Math.random() - 0.5) * zone.size;
-    const y = getTerrainHeightAt(x, z) + 1.05; // quille hauteur 2 -> 1 + 0.05
+  for (let i = 0; i < 30; i++) { // Augmentation de 15 à 30 quilles
+    const x = Math.random() * 160 - 80; // Zone doublée (-80 à 80 au lieu de -40 à 40)
+    const z = Math.random() * 160 - 80;
+    // Visuel
     const pinMesh = new THREE.Mesh(
       new THREE.CylinderGeometry(0.3, 0.3, 2, 16),
       new THREE.MeshPhongMaterial({ color: 0xffffff })
     );
-    pinMesh.position.set(x, y, z);
+    pinMesh.position.set(x, 1, z);
     pinMesh.castShadow = true;
     pinMesh.receiveShadow = true;
     scene.add(pinMesh);
+    // Physique
     const pinBody = new CANNON.Body({ 
       mass: 0.1,
       material: objectMaterial,
@@ -483,20 +381,19 @@ function addPinsAndBlocks(scene, world, carMaterial) {
       collisionFilterMask: -1
     });
     pinBody.addShape(new CANNON.Cylinder(0.3, 0.3, 2, 16));
-    pinBody.position.set(x, y, z);
+    pinBody.position.set(x, 1, z);
     world.addBody(pinBody);
     pins.push({ mesh: pinMesh, body: pinBody });
   }
-  for (let i = 0; i < 12; i++) {
-    const zone = safeZones[Math.floor(Math.random() * safeZones.length)];
-    const x = zone.x + (Math.random() - 0.5) * zone.size;
-    const z = zone.z + (Math.random() - 0.5) * zone.size;
-    const y = getTerrainHeightAt(x, z) + 0.55; // bloc hauteur 1 -> 0.5 + 0.05
+  // Blocs
+  for (let i = 0; i < 25; i++) { // Augmentation de 12 à 25 blocs
+    const x = Math.random() * 160 - 80; // Zone doublée (-80 à 80 au lieu de -40 à 40)
+    const z = Math.random() * 160 - 80;
     const blockMesh = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshPhongMaterial({ color: 0xff4444 })
     );
-    blockMesh.position.set(x, y, z);
+    blockMesh.position.set(x, 0.5, z);
     blockMesh.castShadow = true;
     blockMesh.receiveShadow = true;
     scene.add(blockMesh);
@@ -509,17 +406,35 @@ function addPinsAndBlocks(scene, world, carMaterial) {
       collisionFilterMask: -1
     });
     blockBody.addShape(new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)));
-    blockBody.position.set(x, y, z);
+    blockBody.position.set(x, 0.5, z);
     world.addBody(blockBody);
     pins.push({ mesh: blockMesh, body: blockBody });
   }
-  obstacles = pins;
+  obstacles = pins; // Stocker les obstacles globalement
   return pins;
 }
 
 function initSimu3D() {
   const canvas = document.getElementById("simu-canvas");
   if (!canvas || !THREE) return;
+
+  // Créer le compteur de vitesse
+  const speedometer = document.createElement('div');
+  speedometer.id = 'speedometer';
+  speedometer.style.cssText = `
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    z-index: 1000;
+  `;
+  speedometer.innerHTML = '0 km/h';
+  canvas.parentElement.appendChild(speedometer);
 
   // Taille du canvas
   const width = canvas.parentElement.offsetWidth;
@@ -577,9 +492,6 @@ function initSimu3D() {
   if (typeof addPinsAndBlocks === 'function' && typeof simuScene !== 'undefined' && typeof world !== 'undefined') {
     addPinsAndBlocks(simuScene, world, carMaterial);
   }
-
-  // Ajouter les éléments visuels à la voiture
-  addCarVisuals();
 }
 
 function animateSimu3D() {
@@ -589,12 +501,25 @@ function animateSimu3D() {
   let dx = Math.sin(-currentSteering * 0.5) * dz;
   carMesh.position.z += dz * Math.cos(carMesh.rotation.y);
   carMesh.position.x += dz * Math.sin(carMesh.rotation.y);
-  // Tourner la voiture
-  carMesh.rotation.y += -currentSteering * 0.04;
+  // Tourner la voiture avec une sensibilité plus élevée en marche avant
+  let steeringFactor = 0.30; // Augmentation significative de la sensibilité
+  if (dz < 0) { // En marche arrière
+    steeringFactor = 0.12; // Garder la sensibilité actuelle en marche arrière
+  }
+  carMesh.rotation.y += -currentSteering * steeringFactor;
   // Caméra suit la voiture
-  simuCamera.position.x = carMesh.position.x;
-  simuCamera.position.z = carMesh.position.z + 12;
-  simuCamera.lookAt(carMesh.position.x, carMesh.position.y, carMesh.position.z);
+  const cameraOffset = new THREE.Vector3(0, 3, -8); // Position relative de la caméra (hauteur, distance arrière)
+  const cameraLookOffset = new THREE.Vector3(0, 0, 5); // Point de visée devant la voiture
+  
+  // Calculer la position de la caméra en fonction de la rotation de la voiture
+  const carRotation = carMesh.quaternion;
+  const rotatedOffset = cameraOffset.clone().applyQuaternion(carRotation);
+  const rotatedLookOffset = cameraLookOffset.clone().applyQuaternion(carRotation);
+  
+  // Positionner la caméra
+  simuCamera.position.copy(carMesh.position).add(rotatedOffset);
+  simuCamera.lookAt(carMesh.position.clone().add(rotatedLookOffset));
+
   simuRenderer.render(simuScene, simuCamera);
   requestAnimationFrame(animateSimu3D);
 }
@@ -633,16 +558,17 @@ function updateSteeringVisual(steering) {
 async function setupPhysics() {
   world = new CANNON.World({ gravity: new CANNON.Vec3(0, -9.82, 0) });
 
-  // Matériaux avec friction optimisée pour les pentes
+  // Matériaux avec friction optimisée
   const groundMaterial = new CANNON.Material('ground');
   const carMaterial = new CANNON.Material('car');
   const contact = new CANNON.ContactMaterial(groundMaterial, carMaterial, {
-    friction: 0.6, // Augmenté pour mieux tenir sur les pentes
+    friction: 0.2,
     restitution: 0.1
   });
   world.addContactMaterial(contact);
 
-  // Châssis avec centre de masse plus bas pour la stabilité
+  // Châssis avec distribution de poids réaliste
+  const chassisShape = new CANNON.Box(new CANNON.Vec3(1, 0.3, 2));
   carBody = new CANNON.Body({
     mass: 3,
     position: new CANNON.Vec3(0, 0.8, 0),
@@ -654,14 +580,14 @@ async function setupPhysics() {
     fixedRotation: false,
     allowSleep: false
   });
-  // Ajout de la forme avec un offset pour abaisser le centre de masse
-  carBody.addShape(
-    new CANNON.Box(new CANNON.Vec3(1, 0.3, 2)),
-    new CANNON.Vec3(0, -0.2, 0)
-  );
+
+  // Ajout de formes pour simuler le poids du moteur à l'avant
+  const engineShape = new CANNON.Box(new CANNON.Vec3(0.8, 0.2, 0.8));
+  carBody.addShape(engineShape, new CANNON.Vec3(0, 0.1, 0.8)); // Moteur à l'avant
+  carBody.addShape(chassisShape, new CANNON.Vec3(0, -0.25, 0)); // Châssis principal
   world.addBody(carBody);
 
-  // RaycastVehicle avec paramètres optimisés pour les pentes
+  // RaycastVehicle avec paramètres optimisés
   vehicle = new CANNON.RaycastVehicle({
     chassisBody: carBody,
     indexRightAxis: 0,
@@ -672,9 +598,9 @@ async function setupPhysics() {
   const wheelOptions = {
     radius: 0.4,
     directionLocal: new CANNON.Vec3(0, -1, 0),
-    suspensionStiffness: 45,
+    suspensionStiffness: 35, // Plus rigide pour éviter le wheeling
     suspensionRestLength: 0.3,
-    frictionSlip: 1.5, // Augmenté pour mieux tenir sur les pentes
+    frictionSlip: 0.8,
     dampingRelaxation: 4.5,
     dampingCompression: 3.5,
     maxSuspensionForce: 100000,
@@ -688,17 +614,18 @@ async function setupPhysics() {
     collisionFilterMask: -1
   };
 
+  // Position des roues ajustée pour une meilleure stabilité
   // Avant droit
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.4,  1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.3,  1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Avant gauche
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.4,  1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.3,  1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Arrière droit
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.4, -1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3( 0.9, -0.3, -1.7);
   vehicle.addWheel({ ...wheelOptions });
   // Arrière gauche
-  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.4, -1.7);
+  wheelOptions.chassisConnectionPointLocal = new CANNON.Vec3(-0.9, -0.3, -1.7);
   vehicle.addWheel({ ...wheelOptions });
   vehicle.addToWorld(world);
 
@@ -731,6 +658,14 @@ async function setupPhysics() {
     { type: 'cyl', x: -6, z: 55, r: 1, h: 2 },
     { type: 'cube', x: 5, z: 65, size: 2 },
   ];
+  
+  // Supprimer tous les obstacles existants
+  for (const body of obstacleBodies) {
+    world.removeBody(body);
+  }
+  obstacleBodies = [];
+
+  // Ajouter les nouveaux obstacles
   for (const o of obsData) {
     let body;
     if (o.type === 'cube') {
@@ -746,8 +681,10 @@ async function setupPhysics() {
       body.addShape(new CANNON.Cylinder(o.r, o.r, o.h, 24));
       body.position.set(o.x, o.h/2, o.z);
     }
-    world.addBody(body);
-    obstacleBodies.push(body);
+    if (body) {
+      world.addBody(body);
+      obstacleBodies.push(body);
+    }
   }
 
   // Murs physiques
@@ -785,16 +722,40 @@ function animatePhysics() {
   if (!world) return;
   world.step(1/60);
 
-  // Limiteur de vitesse (fun mais raisonnable)
-  if (carBody.velocity.length() > 20) {
-    carBody.velocity.scale(20 / carBody.velocity.length(), carBody.velocity);
+  // Calculer la vitesse actuelle
+  const currentSpeed = carBody.velocity.length();
+  
+  // Mettre à jour le compteur de vitesse
+  const speedometer = document.getElementById('speedometer');
+  if (speedometer) {
+    const speedKmh = Math.round(currentSpeed * 3.6); // Conversion m/s en km/h
+    speedometer.innerHTML = `${speedKmh} km/h`;
+    // Changer la couleur en fonction de la vitesse
+    if (speedKmh > 60) {
+      speedometer.style.color = '#ff4444';
+    } else if (speedKmh > 30) {
+      speedometer.style.color = '#ffaa00';
+    } else {
+      speedometer.style.color = '#ffffff';
+    }
+  }
+  
+  // Ajuster le FOV en fonction de la vitesse
+  const targetFOV = baseFOV + (currentSpeed * 0.8);
+  currentFOV += (targetFOV - currentFOV) * 0.1; // Animation fluide
+  simuCamera.fov = currentFOV;
+  simuCamera.updateProjectionMatrix();
+
+  // Limiteur de vitesse
+  if (currentSpeed > 20) {
+    carBody.velocity.scale(20 / currentSpeed, carBody.velocity);
   }
 
   // Synchroniser la voiture
   carMesh.position.copy(carBody.position);
   carMesh.quaternion.copy(carBody.quaternion);
 
-  // Synchroniser les roues visuelles avec la physique
+  // Synchroniser les roues
   if (vehicle && wheelMeshes && wheelBodies) {
     for (let i = 0; i < wheelMeshes.length; i++) {
       vehicle.updateWheelTransform(i);
@@ -814,7 +775,26 @@ function animatePhysics() {
     }
   }
 
-  // Traînée visuelle : ajouter la position actuelle
+  // Animation fluide de l'inclinaison de la caméra
+  cameraTilt += (targetCameraTilt - cameraTilt) * 0.1;
+
+  // Mise à jour de la caméra
+  if (carMesh && simuCamera) {
+    // Calculer la position de la caméra en fonction de la rotation de la voiture
+    const carRotation = carMesh.quaternion;
+    const rotatedOffset = cameraOffset.clone().applyQuaternion(carRotation);
+    const rotatedLookOffset = cameraLookOffset.clone().applyQuaternion(carRotation);
+    
+    // Appliquer l'inclinaison de la caméra
+    const tiltMatrix = new THREE.Matrix4().makeRotationX(cameraTilt);
+    rotatedOffset.applyMatrix4(tiltMatrix);
+    
+    // Positionner la caméra
+    simuCamera.position.copy(carMesh.position).add(rotatedOffset);
+    simuCamera.lookAt(carMesh.position.clone().add(rotatedLookOffset));
+  }
+
+  // Traînée visuelle
   if (carMesh) {
     if (trailPoints.length === 0 || carMesh.position.distanceTo(trailPoints[trailPoints.length-1]) > 0.2) {
       trailPoints.push(carMesh.position.clone());
@@ -830,102 +810,9 @@ function animatePhysics() {
     }
   }
 
-  // Caméra suit la voiture
-  simuCamera.position.x = carMesh.position.x;
-  simuCamera.position.z = carMesh.position.z + 12;
-  simuCamera.lookAt(carMesh.position.x, carMesh.position.y, carMesh.position.z);
-
   simuRenderer.render(simuScene, simuCamera);
   requestAnimationFrame(animatePhysics);
 }
-
-// Ajout des éléments visuels à la voiture
-function addCarVisuals() {
-  if (!carMesh) return;
-  
-  // Phares avant
-  const headlightGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.05);
-  const headlightMaterial = new THREE.MeshPhongMaterial({ color: 0xffffcc });
-  
-  const leftHeadlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
-  leftHeadlight.position.set(-0.8, 0.2, 2.1);
-  carMesh.add(leftHeadlight);
-  
-  const rightHeadlight = new THREE.Mesh(headlightGeometry, headlightMaterial);
-  rightHeadlight.position.set(0.8, 0.2, 2.1);
-  carMesh.add(rightHeadlight);
-  
-  // Feux de stop
-  const brakeLightGeometry = new THREE.BoxGeometry(0.2, 0.1, 0.05);
-  const brakeLightMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-  
-  const leftBrakeLight = new THREE.Mesh(brakeLightGeometry, brakeLightMaterial);
-  leftBrakeLight.position.set(-0.8, 0.2, -2.1);
-  carMesh.add(leftBrakeLight);
-  
-  const rightBrakeLight = new THREE.Mesh(brakeLightGeometry, brakeLightMaterial);
-  rightBrakeLight.position.set(0.8, 0.2, -2.1);
-  carMesh.add(rightBrakeLight);
-  
-  // Pot d'échappement
-  const exhaustGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8);
-  const exhaustMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-  const exhaust = new THREE.Mesh(exhaustGeometry, exhaustMaterial);
-  exhaust.rotation.x = Math.PI / 2;
-  exhaust.position.set(0.5, 0.1, -2.2);
-  carMesh.add(exhaust);
-  
-  // Système de particules pour l'échappement
-  const particleCount = 50;
-  const particleGeometry = new THREE.BufferGeometry();
-  const particlePositions = new Float32Array(particleCount * 3);
-  particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-  
-  const particleMaterial = new THREE.PointsMaterial({
-    color: 0x666666,
-    size: 0.1,
-    transparent: true,
-    opacity: 0.6
-  });
-  
-  const particles = new THREE.Points(particleGeometry, particleMaterial);
-  carMesh.add(particles);
-  
-  // Stocker les références pour l'animation
-  carMesh.brakeLights = [leftBrakeLight, rightBrakeLight];
-  carMesh.exhaustParticles = particles;
-  carMesh.particlePositions = particlePositions;
-}
-
-// Fonction de reset de la voiture
-function resetCar() {
-  if (!carBody) {
-    console.warn("Tentative de reset avant l'initialisation de la voiture");
-    return;
-  }
-  try {
-    const x = 0, z = 0;
-    const y = getTerrainHeightAt(x, z) + 0.4; // châssis 0.6 -> 0.3 + 0.1
-    carBody.position.set(x, y, z);
-    carBody.velocity.set(0, 0, 0);
-    carBody.angularVelocity.set(0, 0, 0);
-    carBody.torque.set(0, 0, 0);
-    carBody.quaternion.set(0, 0, 0, 1);
-    if (carMesh) {
-      carMesh.position.set(x, y, z);
-      carMesh.quaternion.set(0, 0, 0, 1);
-    }
-  } catch (error) {
-    console.error("Erreur lors du reset de la voiture:", error);
-  }
-}
-
-// Gestion du reset avec la touche R
-window.addEventListener('keydown', (e) => {
-  if (e.key.toLowerCase() === 'r' && isRunning) {
-    resetCar();
-  }
-});
 
 // Initialisation
 document.addEventListener("DOMContentLoaded", () => {
@@ -984,4 +871,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   requestAnimationFrame(readInputs);
+});
+
+// Ajout du reset voiture (touche R)
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'r' && carBody) {
+    carBody.position.set(0, 2, 0);
+    carBody.velocity.set(0, 0, 0);
+    carBody.angularVelocity.set(0, 0, 0);
+    carBody.torque.set(0, 0, 0);
+    carBody.quaternion.set(0, 0, 0, 1);
+  }
 });
