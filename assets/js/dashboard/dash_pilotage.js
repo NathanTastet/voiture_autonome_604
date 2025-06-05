@@ -143,6 +143,16 @@ function readInputs() {
       } else {
         targetCameraTilt = 0; // Retour à l'inclinaison normale
       }
+      // Triangle (bouton 3) pour reset
+      if (gamepad.buttons[3].pressed) {
+        if (carBody) {
+          carBody.position.set(0, 2, 0);
+          carBody.velocity.set(0, 0, 0);
+          carBody.angularVelocity.set(0, 0, 0);
+          carBody.torque.set(0, 0, 0);
+          carBody.quaternion.set(0, 0, 0, 1);
+        }
+      }
     }
   }
   sendControlCommand({ throttle, brake, steering });
