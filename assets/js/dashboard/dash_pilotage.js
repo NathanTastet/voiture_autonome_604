@@ -746,10 +746,6 @@ function animatePhysics() {
   simuCamera.fov = currentFOV;
   simuCamera.updateProjectionMatrix();
 
-  // Limiteur de vitesse
-  if (currentSpeed > 20) {
-    carBody.velocity.scale(20 / currentSpeed, carBody.velocity);
-  }
 
   // Synchroniser la voiture
   carMesh.position.copy(carBody.position);
